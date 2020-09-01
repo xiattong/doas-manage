@@ -10,7 +10,7 @@ import java.util.Date;
 /**
  * 日期处理
  */
-public class DateUtils {
+public class DateUtil {
     /**
      * 时间格式(yyyy-MM-dd)
      */

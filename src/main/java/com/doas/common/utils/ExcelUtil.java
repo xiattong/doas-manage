@@ -3,12 +3,10 @@ package com.doas.common.utils;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.text.DecimalFormat;
 import java.util.*;
 
@@ -49,15 +47,12 @@ public class ExcelUtil {
             switch (cell.getCellType()) {
                 case NUMERIC:
                 case FORMULA: {
-                    if (DateUtil.isCellDateFormatted(cell)) {
+                    if (org.apache.poi.ss.usermodel.DateUtil.isCellDateFormatted(cell)) {
                         Date date = cell.getDateCellValue();
-                        cellValue = DateUtils.formatTime(date);
+                        cellValue = DateUtil.formatTime(date);
                     } else {
                         DecimalFormat df = new DecimalFormat("0.00");
                         cellValue = df.format(cell.getNumericCellValue());
-                        //int idx = value.indexOf(".00");
-                        //value = idx > 0 ? value.substring(0,idx) : value ;
-                        //cellValue = value;
                     }
                     break;
                 }

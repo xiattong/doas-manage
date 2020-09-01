@@ -3,6 +3,7 @@ package com.doas.controller;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.doas.common.utils.ExcelUtil;
+import com.doas.common.utils.FileUtil;
 import com.doas.common.utils.ResultObject;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,9 +31,8 @@ public class DoasController {
         Map<Integer, List<Object>> dataMap;
         Map<String,Object> resultMap;
         try {
-            //读取磁盘excel文件
-            File file = new File(excelPath + System.getProperty("file.separator") + excelFile);
-            //解析excel文件
+            //获取目录下最新的文件或指定文件
+            File file = FileUtil.getLatestFile(excelPath);
             dataMap = ExcelUtil.readExcelContent(file);
         } catch (Exception e) {
             log.error(e.getMessage());
