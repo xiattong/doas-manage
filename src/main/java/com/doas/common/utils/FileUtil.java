@@ -1,24 +1,33 @@
 package com.doas.common.utils;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.util.Arrays;
 import java.util.Comparator;
 
-public class FileUtil {
+public class FileUtil implements FilenameFilter {
+
+    // 接受的文件类型，小写
+    private String[] acceptSuffix;
+
+    private FileUtil(String[] acceptSuffix){
+        this.acceptSuffix = acceptSuffix;
+    }
+
     /**
      * 获取目录下最新的文件或指定文件
      * @param filePath
      *     filePath为目录时，返回目录下最新的文件
      *     filePath为文件名时，返回该文件
+     *  @param acceptSuffix
+     *      接受的文件类型后缀，使用小写
      * @return File
-     * TODO 当目录下的文件太多后，可能会影响文件读取速度，
-     *  应当需要使用一个线程来控制目录下文件的数量？？？？
      */
-    public static File getLatestFile(String filePath){
-        File file =  new File(filePath);
-        if(file != null) {
-            if (file.isDirectory()){
-                File[] files = file.listFiles();
+    public static File getLatestFile(String filePath,String... acceptSuffix) {
+        File file = new File(filePath);
+        if (file != null) {
+            if (file.isDirectory()) {
+                File[] files = file.listFiles(new FileUtil(acceptSuffix));
                 if (files.length > 0) {
                     Arrays.sort(files, new Comparator<File>() {
                         @Override
@@ -30,11 +39,34 @@ public class FileUtil {
                 } else {
                     throw new RuntimeException("未找到文件！");
                 }
-            }else{
+            } else {
                 return file;
             }
-        }else{
+        } else {
             throw new RuntimeException("未找到文件目录！");
         }
+    }
+
+    /***
+     * 指定查询哪些文件
+     * @param dir
+     * @param name
+     * @return
+     */
+    @Override
+    public boolean accept(File dir, String name) {
+        return isAccept(name);
+    }
+
+    public boolean isAccept(String filename){
+        if(this.acceptSuffix == null || this.acceptSuffix.length <= 0) {
+            return true;
+        }
+        for(String suffix : acceptSuffix){
+            if (filename.toLowerCase().endsWith(suffix)){
+                return true;
+            }
+        }
+        return false;
     }
 }

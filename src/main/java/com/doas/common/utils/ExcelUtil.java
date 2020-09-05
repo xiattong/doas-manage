@@ -11,7 +11,16 @@ import java.text.DecimalFormat;
 import java.util.*;
 
 public class ExcelUtil {
-    public static Map<Integer, List<Object>> readExcelContent(File file) throws Exception {
+
+    /**
+     *
+     * @param file
+     * @param extractNum  抽取后的最大值，0表示不抽取
+     * @return
+     * @throws Exception
+     */
+    public static Map<Integer, List<Object>> readExtractContent(File file,int extractNum)
+            throws Exception {
         Map<Integer, List<Object>> content = new LinkedHashMap<>(50);
         // 上传文件名
         Workbook wb = getWb(file);
@@ -21,9 +30,13 @@ public class ExcelUtil {
         Sheet sheet = wb.getSheetAt(0);
         // 得到总行数
         int rowNum = sheet.getLastRowNum();
+        if(rowNum <= 0){
+            throw new Exception("数据文件中没有可用数据！");
+        }
+        //计算间隔数
+        int interval = extractNum == 0 ? 0 : rowNum / extractNum;
         Row row = sheet.getRow(0);
         int colNum = row.getPhysicalNumberOfCells();
-        // 正文内容应该从第二行开始,第一行为表头的标题
         for (int i = 0; i <= rowNum; i++) {
             row = sheet.getRow(i);
             int j = 0;
@@ -34,6 +47,11 @@ public class ExcelUtil {
                 j++;
             }
             content.put(i, cellValue);
+            i = i + interval;
+            //保证能取到最后一条
+            if(i - interval < rowNum && i >= rowNum){
+                i = rowNum - 1;
+            }
         }
         return content;
     }
@@ -51,8 +69,9 @@ public class ExcelUtil {
                         Date date = cell.getDateCellValue();
                         cellValue = DateUtil.formatTime(date);
                     } else {
-                        DecimalFormat df = new DecimalFormat("0.00");
-                        cellValue = df.format(cell.getNumericCellValue());
+                        //DecimalFormat df = new DecimalFormat("0.00");
+                        //cellValue = df.format(cell.getNumericCellValue());
+                        cellValue = cell.getNumericCellValue();
                     }
                     break;
                 }
@@ -87,10 +106,4 @@ public class ExcelUtil {
         return wb;
     }
 
-
-    public static void main(String[] args) {
-        String a = "安徽\n省 蚌埠市 方阵房地产开发有限公司中央城\n" +
-                "小区 10KV变配电工程HXGN-15高压开关柜技术\n";
-        System.out.println(a.trim().replaceAll("[ \n]+","-"));
-    }
 }
