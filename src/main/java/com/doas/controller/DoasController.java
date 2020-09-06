@@ -1,9 +1,6 @@
 package com.doas.controller;
 
-import com.doas.common.utils.ColorUtil;
-import com.doas.common.utils.ExcelUtil;
-import com.doas.common.utils.FileUtil;
-import com.doas.common.utils.ResultObject;
+import com.doas.common.utils.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.StringUtils;
@@ -14,10 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.io.File;
 import java.text.DecimalFormat;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.List;
-import java.util.ArrayList;
+import java.util.*;
 
 @Slf4j
 @RestController()
@@ -26,10 +20,8 @@ public class DoasController {
     @Value("${excel.filePath}")
     private String excelFilePath;
 
-    private DecimalFormat df = new DecimalFormat("0.00");
-
     /**
-     * @param param :
+     * @param param
      *  dataType "chart":图表数据  "map"：地图数据
      *  extractNum 抽取数据的数量
      * @param
@@ -37,6 +29,7 @@ public class DoasController {
      */
     @PostMapping("/initData")
     public ResultObject initData(@RequestBody Map<String, String> param){
+        log.info(DateUtil.format(new Date(),DateUtil.DATE_PATTERN)+ ":" +param.toString());
         String dataType = param.get("dataType");
         String extractNum = param.get("extractNum");
 
