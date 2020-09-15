@@ -7,9 +7,12 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.text.DecimalFormat;
 import java.util.*;
 
+/**
+ * Excel文件解析工具类
+ * @author xiattong
+ */
 public class ExcelUtil {
 
     /**
@@ -33,7 +36,7 @@ public class ExcelUtil {
         if(rowNum <= 0){
             throw new Exception("数据文件中没有可用数据！");
         }
-        //计算间隔数
+        // 计算间隔数
         int interval = extractNum == 0 ? 0 : rowNum / extractNum;
         Row row = sheet.getRow(0);
         int colNum = row.getPhysicalNumberOfCells();

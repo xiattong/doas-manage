@@ -3,6 +3,10 @@ package com.doas.common.utils;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * 返回结果封装
+ * @author xiattong
+ */
 public class ResultObject extends HashMap<String, Object> {
 	private static final long serialVersionUID = 1L;
 

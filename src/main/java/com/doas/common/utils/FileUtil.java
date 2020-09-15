@@ -1,10 +1,16 @@
 package com.doas.common.utils;
 
+import org.springframework.beans.factory.annotation.Value;
+
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.Arrays;
 import java.util.Comparator;
 
+/**
+ * 文件读取工具类
+ *  @author xiattong
+ */
 public class FileUtil implements FilenameFilter {
 
     // 接受的文件类型，小写

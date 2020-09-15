@@ -2,6 +2,10 @@ package com.doas.common.utils;
 
 import java.math.BigDecimal;
 
+/**
+ * 颜色处理工具类
+ * @author xiattong
+ */
 public class ColorUtil {
 
     /**
