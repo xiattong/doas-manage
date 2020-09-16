@@ -112,7 +112,7 @@ public class DoasController {
                     // 最后一行数据,用于在面板上展示
                     if (lastRow) {
                         realTimeData.set(i, realTimeData.get(i) + " : "
-                                + cells.get(i) + "|" + v.get(v.size() - 3).toString());
+                                + cells.get(i) + " " + v.get(v.size() - 3).toString());
                     }
                 }
                 if (lastRow) {
@@ -122,7 +122,6 @@ public class DoasController {
                 }
             }
         }
-
         resultMap.put("xAxis", xAxis.toArray());
         resultMap.put("data", data.toArray());
         resultMap.put("latestTime", xAxis.get(xAxis.size() - 1));
@@ -180,7 +179,7 @@ public class DoasController {
                     systemState[1] =  v.get(v.size() - 1).toString();
                 }
             }
-        };
+        }
         resultMap.put("data", data.toArray());
         resultMap.put("colors", colors.toArray());
         resultMap.put("coordinates", coordinates.toArray());
