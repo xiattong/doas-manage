@@ -43,13 +43,13 @@ public class FileUtil implements FilenameFilter {
                     });
                     return files[0];
                 } else {
-                    throw new RuntimeException("未找到文件！");
+                    return null;
                 }
             } else {
                 return file;
             }
         } else {
-            throw new RuntimeException("未找到文件目录！");
+            return null;
         }
     }
 

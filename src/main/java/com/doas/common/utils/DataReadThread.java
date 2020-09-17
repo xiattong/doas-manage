@@ -50,53 +50,57 @@ public class DataReadThread extends Thread {
         Charset charset=Charset.forName("GBK");
         while(true) {
             File file = FileUtil.getLatestFile(excelFilePath, ".txt");
-            String fileName = file.getName();
-            // 文件变更时，清空 dataMap,重置读取位置
-            if (!currentFileName.equals(fileName)) {
-                dataList.clear();
-                position = 0;
-                currentFileName = fileName;
-                log.info("读取文件重置:" + fileName);
-            }
-            // 增量读取文件
-            long len = file.length() - position;
-            if(len > position) {
-                log.info("读取文件" + fileName + " : " + position + " , " + len);
-                byte[] ds = new byte[(int) len];
-                try {
-                    MappedByteBuffer mappedByteBuffer = new RandomAccessFile(file, "rw")
-                            .getChannel()
-                            .map(FileChannel.MapMode.READ_ONLY, position, len);
-                    for (int offset = 0; offset < len; offset++) {
-                        byte b = mappedByteBuffer.get();
-                        ds[offset] = b;
-                    }
-                    Scanner scan = new Scanner(new ByteArrayInputStream(ds),charsetName).useDelimiter(" ");
-                    while (scan.hasNext()) {
-                        String[] lines = scan.next().split("\r\n");
-                        for (String line : lines) {
-                            if(cellsNum == 0){
-                                dataList.add(Arrays.asList(line.split("~")));
-                                cellsNum = dataList.get(0).size();
-                            } else if(line.split("~").length == cellsNum) {
-                                dataList.add(Arrays.asList(line.split("~")));
-                            }
-                        }
-                    }
-                    position = len;
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    log.error("读取文件异常，读取重置" + e.getMessage());
+            if(file != null) {
+                String fileName = file.getName();
+                // 文件变更时，清空 dataMap,重置读取位置
+                if (!currentFileName.equals(fileName)) {
                     dataList.clear();
                     position = 0;
-                    currentFileName = "";
+                    currentFileName = fileName;
+                    log.info("Re-read the file : " + fileName);
                 }
+                // 增量读取文件
+                long len = file.length() - position;
+                if (len > position) {
+                    log.info("Read the file " + fileName + " : " + position + " , " + len);
+                    byte[] ds = new byte[(int) len];
+                    try {
+                        MappedByteBuffer mappedByteBuffer = new RandomAccessFile(file, "rw")
+                                .getChannel()
+                                .map(FileChannel.MapMode.READ_ONLY, position, len);
+                        for (int offset = 0; offset < len; offset++) {
+                            byte b = mappedByteBuffer.get();
+                            ds[offset] = b;
+                        }
+                        Scanner scan = new Scanner(new ByteArrayInputStream(ds), charsetName).useDelimiter(" ");
+                        while (scan.hasNext()) {
+                            String[] lines = scan.next().split("\r\n");
+                            for (String line : lines) {
+                                if (cellsNum == 0) {
+                                    dataList.add(Arrays.asList(line.split("~")));
+                                    cellsNum = dataList.get(0).size();
+                                } else if (line.split("~").length == cellsNum) {
+                                    dataList.add(Arrays.asList(line.split("~")));
+                                }
+                            }
+                        }
+                        position = len;
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        log.error("Read file exception! Read reset! :" + e.getMessage());
+                        dataList.clear();
+                        position = 0;
+                        currentFileName = "";
+                    }
+                }
+            } else {
+                log.error("No file to read! wait and try again!");
             }
             try {
                 Thread.sleep(refreshHz*1000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
-                log.error("读取文件线程异常" + e.getMessage());
+                log.error("File reader thread exception! :" + e.getMessage());
             }
         }
     }

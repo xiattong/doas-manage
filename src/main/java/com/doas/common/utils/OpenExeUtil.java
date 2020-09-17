@@ -21,9 +21,9 @@ public class OpenExeUtil {
         String read =reader.readLine();
         if (read == null){
             Runtime.getRuntime().exec("\""+exePath+"\"");
-            log.info("程序"+exePath+"启动成功!");
+            log.info("The program started successfully! :"+exePath);
         }else{
-            log.info("已经存在启动的程序"+exePath+"!");
+            log.info("Existing programs! :"+exePath);
         }
     }
 

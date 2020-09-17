@@ -33,7 +33,7 @@ public class DoasController implements InitializingBean {
     @Override
     public void afterPropertiesSet() throws Exception {
         dataReadThread.start();
-        log.info("文件读取线程启动成功!");
+        log.info("File reader thread started successfully!");
         try {
             if(!StringUtils.isEmpty(setup)){
                 OpenExeUtil.openExe(setup);
@@ -45,7 +45,7 @@ public class DoasController implements InitializingBean {
 
         } catch (IOException e) {
             e.printStackTrace();
-            log.error("程序启动异常!"+e.getMessage());
+            log.error("Program startup exception!"+e.getMessage());
         }
     }
 
