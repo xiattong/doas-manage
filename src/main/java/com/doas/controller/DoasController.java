@@ -2,12 +2,15 @@ package com.doas.controller;
 
 import com.doas.common.utils.*;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -16,15 +19,34 @@ import java.util.*;
  */
 @Slf4j
 @RestController()
-public class DoasController {
+public class DoasController implements InitializingBean {
 
-    /**
-     * 数据读取线程
-     * @param dataReadThread
-     */
+    @Value("${exe.setup}")
+    private String setup;
+
+    @Value("${exe.nginx}")
+    private String nginx;
+
     @Autowired
-    public DoasController(DataReadThread dataReadThread){
+    private DataReadThread dataReadThread;
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
         dataReadThread.start();
+        log.info("文件读取线程启动成功!");
+        try {
+            if(!StringUtils.isEmpty(setup)){
+                OpenExeUtil.openExe(setup);
+            }
+
+            if(!StringUtils.isEmpty(nginx)){
+                OpenExeUtil.openExe(nginx);
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            log.error("程序启动异常!"+e.getMessage());
+        }
     }
 
     /**
@@ -36,7 +58,6 @@ public class DoasController {
      */
     @PostMapping("/initData")
     public ResultObject initData(@RequestBody Map<String, String> param) {
-        log.info(DateUtil.format(new Date(), DateUtil.DATE_PATTERN) + ":" + param.toString());
         String dataType = param.get("dataType");
         String extractNum = param.get("extractNum");
 
@@ -85,15 +106,10 @@ public class DoasController {
         List<String> realTimeData = new ArrayList<>();
         //系统状态
         String[] systemState = new String[2];
-        //判断数据的最后一行是否完整，不完整便舍弃
-        boolean isFull = dataList.get(0).size() == dataList.get(dataList.size() - 1).size();
-        if(!isFull){
-            dataList.remove(dataList.size() - 1);
-        }
         //遍历解析数据
         for(int k = 0 ; k < dataList.size() ; k ++){
             List<Object> v = dataList.get(k);
-            if (k == 0) {
+            if(k == 0) {
                 //存储因子
                 List<Object> cells = v.subList(1, v.size() - 5);
                 resultMap.put("factors", cells.toArray());
@@ -146,17 +162,12 @@ public class DoasController {
         List<List<Object>> coordinates = new ArrayList<>();
         //系统状态
         String[] systemState = new String[2];
-        //判断数据的最后一行是否完整，不完整便舍弃
-        boolean isFull = dataList.get(0).size() == dataList.get(dataList.size() - 1).size();
-        if(!isFull){
-            dataList.remove(dataList.size() - 1);
-        }
         //遍历解析数据
         for(int k = 0 ; k < dataList.size() ; k ++){
             List<Object> v = dataList.get(k);
-            if (k == 0) {
+            List<Object> cells = v.subList(1, v.size() - 5);
+            if(k == 0) {
                 //存储因子
-                List<Object> cells = v.subList(1, v.size() - 5);
                 resultMap.put("factors", cells.toArray());
                 for (int i = 0; i < cells.size(); i++) {
                     data.add(new ArrayList<>());
@@ -164,7 +175,6 @@ public class DoasController {
                 }
             } else {
                 //存储数值
-                List<Object> cells = v.subList(1, v.size() - 5);
                 for (int i = 0; i < cells.size(); i++) {
                     data.get(i).add(cells.get(i));
                     colors.get(i).add(ColorUtil.convertVertexColors(

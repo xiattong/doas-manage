@@ -3,12 +3,14 @@ package com.doas.common.utils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.RandomAccessFile;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.charset.Charset;
 import java.util.*;
 
 /**
@@ -34,12 +36,18 @@ public class DataReadThread extends Thread {
     @Value("${data.refresh.hz}")
     private int refreshHz;
 
+    @Value("${data.charsetName}")
+    private String charsetName;
+    // 行的列数
+    private int cellsNum = 0;
+
     /**
      * 读取txt线程
      * @return
      */
     @Override
     public void run() {
+        Charset charset=Charset.forName("GBK");
         while(true) {
             File file = FileUtil.getLatestFile(excelFilePath, ".txt");
             String fileName = file.getName();
@@ -63,11 +71,16 @@ public class DataReadThread extends Thread {
                         byte b = mappedByteBuffer.get();
                         ds[offset] = b;
                     }
-                    Scanner scan = new Scanner(new ByteArrayInputStream(ds)).useDelimiter(" ");
+                    Scanner scan = new Scanner(new ByteArrayInputStream(ds),charsetName).useDelimiter(" ");
                     while (scan.hasNext()) {
                         String[] lines = scan.next().split("\r\n");
                         for (String line : lines) {
-                            dataList.add(Arrays.asList(line.split("~")));
+                            if(cellsNum == 0){
+                                dataList.add(Arrays.asList(line.split("~")));
+                                cellsNum = dataList.get(0).size();
+                            } else if(line.split("~").length == cellsNum) {
+                                dataList.add(Arrays.asList(line.split("~")));
+                            }
                         }
                     }
                     position = len;
