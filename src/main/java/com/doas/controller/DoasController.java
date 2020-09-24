@@ -1,5 +1,6 @@
 package com.doas.controller;
 
+import com.alibaba.fastjson.JSON;
 import com.doas.common.utils.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
@@ -32,6 +33,7 @@ public class DoasController implements InitializingBean {
 
     @Override
     public void afterPropertiesSet() throws Exception {
+        //启动文件读取线程
         dataReadThread.start();
         log.info("File reader thread started successfully!");
         try {
@@ -58,6 +60,7 @@ public class DoasController implements InitializingBean {
      */
     @PostMapping("/initData")
     public ResultObject initData(@RequestBody Map<String, String> param) {
+        log.info("param:"+ JSON.toJSONString(param));
         String dataType = param.get("dataType");
         String extractNum = param.get("extractNum");
 
@@ -159,7 +162,8 @@ public class DoasController implements InitializingBean {
         //颜色
         List<List<Object>> colors = new ArrayList<>();
         //坐标-地图数据
-        List<List<Object>> coordinates = new ArrayList<>();
+        //List<List<String>> coordinates = new ArrayList<>();
+        List<double[]> coordinates = new ArrayList<>();
         //系统状态
         String[] systemState = new String[2];
         //遍历解析数据
@@ -180,8 +184,9 @@ public class DoasController implements InitializingBean {
                     colors.get(i).add(ColorUtil.convertVertexColors(
                             Double.parseDouble(cells.get(i).toString()), red));
                 }
-                //存储坐标
-                coordinates.add(v.subList(v.size() - 5, v.size() - 3));
+                //存储坐标 TODO
+                List<Object> coordinate = v.subList(v.size() - 5, v.size() - 3);
+                coordinates.add(PositionUtil.convertList(coordinate));
                 // 最后一行数据
                 if (k == dataList.size() - 1) {
                     // 存储系统状态

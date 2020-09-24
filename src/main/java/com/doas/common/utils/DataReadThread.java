@@ -1,9 +1,9 @@
 package com.doas.common.utils;
 
+import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -11,7 +11,10 @@ import java.io.RandomAccessFile;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Scanner;
 
 /**
  * txt 文件解析工具
@@ -25,8 +28,6 @@ public class DataReadThread extends Thread {
 
     /** 读取的文件内容*/
     public static List<List<Object>> dataList = new ArrayList<>();
-    /** 读取起始位置*/
-    private long position = 0;
     /** 文件名称*/
     private String currentFileName = "";
 
@@ -47,27 +48,20 @@ public class DataReadThread extends Thread {
      */
     @Override
     public void run() {
-        Charset charset=Charset.forName("GBK");
+        List<List<Object>> tempDataList = null;
         while(true) {
             File file = FileUtil.getLatestFile(excelFilePath, ".txt");
+            tempDataList = new ArrayList<>();
             if(file != null) {
                 String fileName = file.getName();
-                // 文件变更时，清空 dataMap,重置读取位置
-                if (!currentFileName.equals(fileName)) {
-                    dataList.clear();
-                    position = 0;
-                    currentFileName = fileName;
-                    log.info("Re-read the file : " + fileName);
-                }
-                // 增量读取文件
-                long len = file.length() - position;
-                if (len > position) {
-                    log.info("Read the file " + fileName + " : " + position + " , " + len);
+                long len = file.length();
+                if (len > 0) {
+                    log.info("Read the file " + fileName + " : " + len);
                     byte[] ds = new byte[(int) len];
                     try {
-                        MappedByteBuffer mappedByteBuffer = new RandomAccessFile(file, "rw")
+                        MappedByteBuffer mappedByteBuffer = new RandomAccessFile(file, "r")
                                 .getChannel()
-                                .map(FileChannel.MapMode.READ_ONLY, position, len);
+                                .map(FileChannel.MapMode.READ_ONLY, 0, len);
                         for (int offset = 0; offset < len; offset++) {
                             byte b = mappedByteBuffer.get();
                             ds[offset] = b;
@@ -77,31 +71,30 @@ public class DataReadThread extends Thread {
                             String[] lines = scan.next().split("\r\n");
                             for (String line : lines) {
                                 if (cellsNum == 0) {
-                                    dataList.add(Arrays.asList(line.split("~")));
-                                    cellsNum = dataList.get(0).size();
+                                    tempDataList.add(Arrays.asList(line.split("~")));
+                                    cellsNum = tempDataList.get(0).size();
                                 } else if (line.split("~").length == cellsNum) {
-                                    dataList.add(Arrays.asList(line.split("~")));
+                                    tempDataList.add(Arrays.asList(line.split("~")));
                                 }
                             }
                         }
-                        position = len;
                     } catch (Exception e) {
                         e.printStackTrace();
                         log.error("Read file exception! Read reset! :" + e.getMessage());
-                        dataList.clear();
-                        position = 0;
-                        currentFileName = "";
                     }
                 }
+                dataList = tempDataList;
             } else {
                 log.error("No file to read! wait and try again!");
             }
+            System.gc();
             try {
                 Thread.sleep(refreshHz*1000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
                 log.error("File reader thread exception! :" + e.getMessage());
             }
+
         }
     }
 }
