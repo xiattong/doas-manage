@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.*;
 
 /**
@@ -27,6 +28,9 @@ public class DoasController implements InitializingBean {
 
     @Value("${exe.nginx}")
     private String nginx;
+
+    @Value("${company-name}")
+    private String companyName;
 
     @Autowired
     private DataReadThread dataReadThread;
@@ -89,6 +93,13 @@ public class DoasController implements InitializingBean {
             return ResultObject.error(e.getMessage());
         }
         ResultObject result = ResultObject.ok();
+        try {
+            resultMap.put("companyName",new String(companyName.getBytes
+                    ("iso-8859-1"), "UTF-8"));
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            resultMap.put("companyName",companyName);
+        }
         result.put("result", resultMap);
         return result;
     }
