@@ -10,5 +10,6 @@ public class DoasManageApplication {
         SpringApplication.run(DoasManageApplication.class, args);
         // 生产桌面快捷方式
         DesktopUtil.outputDesktop();
+        DesktopUtil.autoOpenWeb();
     }
 }

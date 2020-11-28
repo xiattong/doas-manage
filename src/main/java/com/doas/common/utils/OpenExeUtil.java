@@ -26,6 +26,4 @@ public class OpenExeUtil {
             log.info("Existing programs! :"+exePath);
         }
     }
-
-
 }

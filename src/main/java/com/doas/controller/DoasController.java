@@ -40,19 +40,6 @@ public class DoasController implements InitializingBean {
         //启动文件读取线程
         dataReadThread.start();
         log.info("File reader thread started successfully!");
-        try {
-            if(!StringUtils.isEmpty(setup)){
-                OpenExeUtil.openExe(setup);
-            }
-
-            if(!StringUtils.isEmpty(nginx)){
-                OpenExeUtil.openExe(nginx);
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-            log.error("Program startup exception!"+e.getMessage());
-        }
     }
 
     /**

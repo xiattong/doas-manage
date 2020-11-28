@@ -38,7 +38,10 @@ public class FileUtil implements FilenameFilter {
                     Arrays.sort(files, new Comparator<File>() {
                         @Override
                         public int compare(File file1, File file2) {
-                            return (int) (file2.lastModified() - file1.lastModified());
+                            //return (int) (file2.lastModified() - file1.lastModified());
+                            String file2Name = file2.getName().substring(0,file2.getName().lastIndexOf("."));
+                            String file1Name = file1.getName().substring(0,file1.getName().lastIndexOf("."));
+                            return (int)(Long.parseLong(file2Name) - Long.parseLong(file1Name));
                         }
                     });
                     return files[0];
