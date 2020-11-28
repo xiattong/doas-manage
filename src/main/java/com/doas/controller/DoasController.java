@@ -32,6 +32,9 @@ public class DoasController implements InitializingBean {
     @Value("${company-name}")
     private String companyName;
 
+    @Value("${map-type}")
+    private String mapType;
+
     @Autowired
     private DataReadThread dataReadThread;
 
@@ -59,19 +62,19 @@ public class DoasController implements InitializingBean {
             extractNum = "0";
         }
         List<List<Object>> dataList = DataReadThread.dataList;;
-        Map<String, Object> resultMap;
+        Map<String, Object> resultMap = new HashMap<>();
         if (dataList.size() <= 1) {
             return ResultObject.error("没有数据!");
         }
         try {
             if ("chart".equals(dataType)) {
                 resultMap = dataParseChart(dataList);
-            } else {
+            } else if("map-line".equals(dataType) || "map-wall".equals(dataType)) {
                 String red = param.get("red");
                 if (StringUtils.isEmpty(red)) {
                     red = "1000";
                 }
-                resultMap = dataParseMap(dataList, Integer.parseInt(red));
+                resultMap = dataParseMap(dataList, dataType, Integer.parseInt(red));
             }
 
         } catch (Exception e) {
@@ -87,6 +90,7 @@ public class DoasController implements InitializingBean {
             e.printStackTrace();
             resultMap.put("companyName",companyName);
         }
+        resultMap.put("mapType",mapType);
         result.put("result", resultMap);
         return result;
     }
@@ -153,14 +157,13 @@ public class DoasController implements InitializingBean {
      * @param dataList
      * @return
      */
-    private Map<String, Object> dataParseMap(List<List<Object>> dataList, int red) {
+    private Map<String, Object> dataParseMap(List<List<Object>> dataList, String dataType, int red) {
         Map<String, Object> resultMap = new HashMap<>();
         //数值-高度
         List<List<Object>> data = new ArrayList<>();
         //颜色
         List<List<Object>> colors = new ArrayList<>();
         //坐标-地图数据
-        //List<List<String>> coordinates = new ArrayList<>();
         List<double[]> coordinates = new ArrayList<>();
         //系统状态
         String[] systemState = new String[2];
