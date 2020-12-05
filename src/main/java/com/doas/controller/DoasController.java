@@ -56,11 +56,12 @@ public class DoasController implements InitializingBean {
         log.info("param:"+ JSON.toJSONString(param));
         String dataType = param.get("dataType");
         String extractNum = param.get("extractNum");
-
+        String currentFileName = param.get("currentFileName");
+        dataReadThread.currentFileName = currentFileName;
         if (StringUtils.isEmpty(extractNum)) {
             extractNum = "0";
         }
-        List<List<Object>> dataList = DataReadThread.dataList;;
+        List<List<Object>> dataList = dataReadThread.dataList;;
         Map<String, Object> resultMap = new HashMap<>();
         if (dataList.size() <= 1) {
             return ResultObject.error("没有数据!");
@@ -90,6 +91,7 @@ public class DoasController implements InitializingBean {
             resultMap.put("companyName",companyName);
         }
         resultMap.put("mapType",mapType);
+        resultMap.put("fileNameList",dataReadThread.fileNameList);
         result.put("result", resultMap);
         return result;
     }

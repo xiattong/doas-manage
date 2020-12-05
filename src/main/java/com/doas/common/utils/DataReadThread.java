@@ -1,16 +1,15 @@
 package com.doas.common.utils;
 
-import com.alibaba.fastjson.JSON;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.RandomAccessFile;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -27,9 +26,11 @@ import java.util.Scanner;
 public class DataReadThread extends Thread {
 
     /** 读取的文件内容*/
-    public static List<List<Object>> dataList = new ArrayList<>();
-    /** 文件名称*/
-    private String currentFileName = "";
+    public List<List<Object>> dataList = new ArrayList<>();
+    /**文件列表*/
+    public List<String> fileNameList;
+    /**当前读取的文件名称*/
+    public String currentFileName = "";
 
     @Value("${data.filePath}")
     private String excelFilePath;
@@ -42,6 +43,11 @@ public class DataReadThread extends Thread {
     // 行的列数
     private int cellsNum = 0;
 
+
+    public void setCurrentFileName(String currentFileName){
+        this.currentFileName = currentFileName;
+    }
+
     /**
      * 读取txt线程
      * @return
@@ -50,7 +56,18 @@ public class DataReadThread extends Thread {
     public void run() {
         List<List<Object>> tempDataList = null;
         while(true) {
-            File file = FileUtil.getLatestFile(excelFilePath, ".txt");
+
+            // 更新文件名称列表
+            fileNameList = FileUtil.getSortedFileNameList(excelFilePath,".txt");
+            // 文件名集合
+            String filePath = excelFilePath;
+            if(!StringUtils.isEmpty(currentFileName)
+                    && fileNameList.contains(currentFileName)){
+                filePath = filePath +"/"+currentFileName;
+            }else{
+                filePath = filePath +"/"+fileNameList.get(0);
+            }
+            File file = new File(filePath);
             tempDataList = new ArrayList<>();
             cellsNum = 0;
             if(file != null) {
