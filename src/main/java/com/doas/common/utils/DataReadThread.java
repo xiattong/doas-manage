@@ -54,9 +54,8 @@ public class DataReadThread extends Thread {
      */
     @Override
     public void run() {
-        List<List<Object>> tempDataList = null;
         while(true) {
-
+            List<List<Object>> tempDataList = new ArrayList<>();
             // 更新文件名称列表
             fileNameList = FileUtil.getSortedFileNameList(excelFilePath,".txt");
             // 文件名集合
@@ -68,7 +67,6 @@ public class DataReadThread extends Thread {
                 filePath = filePath +"/"+fileNameList.get(0);
             }
             File file = new File(filePath);
-            tempDataList = new ArrayList<>();
             cellsNum = 0;
             if(file != null) {
                 String fileName = file.getName();

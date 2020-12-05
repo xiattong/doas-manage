@@ -61,7 +61,7 @@ public class DoasController implements InitializingBean {
         if (StringUtils.isEmpty(extractNum)) {
             extractNum = "0";
         }
-        List<List<Object>> dataList = dataReadThread.dataList;;
+        List<List<Object>> dataList = dataReadThread.dataList;
         Map<String, Object> resultMap = new HashMap<>();
         if (dataList.size() <= 1) {
             return ResultObject.error("没有数据!");
