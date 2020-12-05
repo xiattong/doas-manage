@@ -52,6 +52,7 @@ public class DataReadThread extends Thread {
         while(true) {
             File file = FileUtil.getLatestFile(excelFilePath, ".txt");
             tempDataList = new ArrayList<>();
+            cellsNum = 0;
             if(file != null) {
                 String fileName = file.getName();
                 long len = file.length();
@@ -74,7 +75,18 @@ public class DataReadThread extends Thread {
                                     tempDataList.add(Arrays.asList(line.split("~")));
                                     cellsNum = tempDataList.get(0).size();
                                 } else if (line.split("~").length == cellsNum) {
-                                    tempDataList.add(Arrays.asList(line.split("~")));
+                                    List<Object> dataLine = Arrays.asList(line.split("~"));
+                                    List<Object> coordinate = dataLine.subList(dataLine.size() - 5, dataLine.size() - 3);
+                                    // 舍弃坐标中包含0的数据
+                                    try {
+                                        if (Double.valueOf(coordinate.get(0).toString()) == 0
+                                                || Double.valueOf(coordinate.get(1).toString()) == 0)
+                                            continue;
+                                    } catch (NumberFormatException e){
+                                        log.info(coordinate.toString());
+                                        log.error("坐标转化异常："+e.getMessage());
+                                    }
+                                     tempDataList.add(dataLine );
                                 }
                             }
                         }

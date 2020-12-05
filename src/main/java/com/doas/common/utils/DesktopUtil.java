@@ -26,21 +26,19 @@ public class DesktopUtil {
 
     // 自动打开
     public static void autoOpenWeb() {
-        Map<String,String> addressMap = NetworkUtil.getInet4Address();
-        for(String key : addressMap.keySet()){
-            try {
-                String url = "http://" + addressMap.get(key) + ":8086";
-                //Runtime.getRuntime().exec("rundll32 url.dll,FileProtocolHandler " + url);
-                Desktop desktop = Desktop.getDesktop();
-                if (Desktop.isDesktopSupported() && desktop.isSupported(Desktop.Action.BROWSE)) {
-                    URI uri = new URI(url);
-                    desktop.browse(uri);
-                }
-                break;
-            } catch(Exception e) {
-                e.printStackTrace();
-                log.error("打开浏览器失败："+e.getMessage());
+        //Map<String,String> addressMap = NetworkUtil.getInet4Address();
+        try {
+            //String url = "http://" + addressMap.get(key) + ":8086";
+            String url = "http://127.0.0.1:8086";
+            //Runtime.getRuntime().exec("rundll32 url.dll,FileProtocolHandler " + url);
+            Desktop desktop = Desktop.getDesktop();
+            if (Desktop.isDesktopSupported() && desktop.isSupported(Desktop.Action.BROWSE)) {
+                URI uri = new URI(url);
+                desktop.browse(uri);
             }
+        } catch(Exception e) {
+            e.printStackTrace();
+            log.error("打开浏览器失败："+e.getMessage());
         }
     }
 
