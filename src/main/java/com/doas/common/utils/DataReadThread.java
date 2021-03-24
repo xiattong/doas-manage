@@ -43,7 +43,6 @@ public class DataReadThread extends Thread {
     // 行的列数
     private int cellsNum = 0;
 
-
     public void setCurrentFileName(String currentFileName){
         this.currentFileName = currentFileName;
     }
@@ -91,17 +90,7 @@ public class DataReadThread extends Thread {
                                     cellsNum = tempDataList.get(0).size();
                                 } else if (line.split("~").length == cellsNum) {
                                     List<Object> dataLine = Arrays.asList(line.split("~"));
-                                    List<Object> coordinate = dataLine.subList(dataLine.size() - 5, dataLine.size() - 3);
-                                    // 舍弃坐标中包含0的数据
-                                    try {
-                                        if (Double.valueOf(coordinate.get(0).toString()) == 0
-                                                || Double.valueOf(coordinate.get(1).toString()) == 0)
-                                            continue;
-                                    } catch (NumberFormatException e){
-                                        log.info(coordinate.toString());
-                                        log.error("坐标转化异常："+e.getMessage());
-                                    }
-                                     tempDataList.add(dataLine );
+                                    tempDataList.add(dataLine);
                                 }
                             }
                         }
@@ -121,7 +110,6 @@ public class DataReadThread extends Thread {
                 e.printStackTrace();
                 log.error("File reader thread exception! :" + e.getMessage());
             }
-
         }
     }
 }

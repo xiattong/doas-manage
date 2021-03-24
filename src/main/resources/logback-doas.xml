@@ -1,4 +1,5 @@
 <configuration>
+    <springProperty scope="context" name="logging.path" source="logging.file.path"/>
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern> %red(%d{yyyy-MM-dd HH:mm:ss}) %green([%thread]) %highlight(%-5level) (%file:%line\)-(%msg%n)</pattern>
@@ -8,7 +9,7 @@
         <Prudent>true</Prudent>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <FileNamePattern>
-                D:/logs/%d{yyyy-MM-dd}/%d{yyyy-MM-dd}.log
+                ${logging.path}/%d{yyyy-MM-dd}/%d{yyyy-MM-dd}.log
             </FileNamePattern>
         </rollingPolicy>
         <layout class="ch.qos.logback.classic.PatternLayout">

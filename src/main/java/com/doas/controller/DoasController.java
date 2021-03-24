@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -70,13 +71,8 @@ public class DoasController implements InitializingBean {
             if ("chart".equals(dataType)) {
                 resultMap = dataParseChart(dataList);
             } else if("map-line".equals(dataType) || "map-wall".equals(dataType)) {
-                String red = param.get("red");
-                if (StringUtils.isEmpty(red)) {
-                    red = "1000";
-                }
-                resultMap = dataParseMap(dataList, dataType, Integer.parseInt(red));
+                resultMap = dataParseMap(dataList);
             }
-
         } catch (Exception e) {
             log.error(e.getMessage());
             e.printStackTrace();
@@ -158,7 +154,7 @@ public class DoasController implements InitializingBean {
      * @param dataList
      * @return
      */
-    private Map<String, Object> dataParseMap(List<List<Object>> dataList, String dataType, int red) {
+    private Map<String, Object> dataParseMap(List<List<Object>> dataList) {
         Map<String, Object> resultMap = new HashMap<>();
         //数值-高度
         List<List<Object>> data = new ArrayList<>();
@@ -168,10 +164,13 @@ public class DoasController implements InitializingBean {
         List<double[]> coordinates = new ArrayList<>();
         //系统状态
         String[] systemState = new String[2];
+        // 保存各因子 red 值的列表
+        List<Integer> redList = new ArrayList<>();
         //遍历解析数据
         for(int k = 0 ; k < dataList.size() ; k ++){
-            List<Object> v = dataList.get(k);
-            List<Object> cells = v.subList(1, v.size() - 5);
+            List<Object> row = dataList.get(k);
+            //保存数值的数据
+            List<Object> cells = row.subList(1, row.size() - 5);
             if(k == 0) {
                 //存储因子
                 resultMap.put("factors", cells.toArray());
@@ -180,20 +179,37 @@ public class DoasController implements InitializingBean {
                     colors.add(new ArrayList<>());
                 }
             } else {
+                //存储坐标，地图舍弃坐标为 0 的数据
+                List<Object> coordinate = row.subList(row.size() - 5, row.size() - 3);
+                if (Double.valueOf(coordinate.get(0).toString()) == 0
+                        || Double.valueOf(coordinate.get(1).toString()) == 0) {
+                    continue;
+                }
+                //舍弃数值为0的数据
+                if(CollectionUtils.isEmpty(redList)) {
+                    int sumCellValue = 0;
+                    for (int i = 0; i < cells.size(); i++) {
+                        sumCellValue = sumCellValue + Integer.parseInt(cells.get(i).toString());
+                    }
+                    if(sumCellValue <= 0){
+                        continue;
+                    }
+                    // 计算 redList
+                    redList = redListComputer(cells);
+                }
+
+                coordinates.add(PositionUtil.convertList(coordinate));
                 //存储数值
                 for (int i = 0; i < cells.size(); i++) {
                     data.get(i).add(cells.get(i));
                     colors.get(i).add(ColorUtil.convertVertexColors(
-                            Double.parseDouble(cells.get(i).toString()), red));
+                            Double.parseDouble(cells.get(i).toString()), redList.get(i)));
                 }
-                //存储坐标 TODO
-                List<Object> coordinate = v.subList(v.size() - 5, v.size() - 3);
-                coordinates.add(PositionUtil.convertList(coordinate));
                 // 最后一行数据
                 if (k == dataList.size() - 1) {
                     // 存储系统状态
-                    systemState[0] =  v.get(v.size() - 2).toString();
-                    systemState[1] =  v.get(v.size() - 1).toString();
+                    systemState[0] =  row.get(row.size() - 2).toString();
+                    systemState[1] =  row.get(row.size() - 1).toString();
                 }
             }
         }
@@ -201,6 +217,25 @@ public class DoasController implements InitializingBean {
         resultMap.put("colors", colors.toArray());
         resultMap.put("coordinates", coordinates.toArray());
         resultMap.put("systemState",systemState);
+        resultMap.put("redList",redList.toArray());
         return resultMap;
+    }
+
+    /**
+     * 根据 cells 的值，计算出每个因子合适的red
+     * @param cells
+     * @return
+     */
+    private List<Integer> redListComputer(List<Object> cells) {
+        List<Integer> redList = new ArrayList<>();
+        double scale = 0.75;
+        cells.forEach(item -> {
+            int red = (int)Math.round(Double.parseDouble(item.toString()) * scale);
+            if(red <= 0){
+                red = 1;
+            }
+            redList.add(red);
+        });
+        return redList;
     }
 }
