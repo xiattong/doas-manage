@@ -208,8 +208,8 @@ public class DoasController implements InitializingBean {
                 // 最后一行数据
                 if (k == dataList.size() - 1) {
                     // 存储系统状态
-                    systemState[0] =  row.get(row.size() - 2).toString();
-                    systemState[1] =  row.get(row.size() - 1).toString();
+                    systemState[0] = row.get(row.size() - 2).toString();
+                    systemState[1] = row.get(row.size() - 1).toString();
                 }
             }
         }
