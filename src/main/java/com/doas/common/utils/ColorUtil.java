@@ -57,30 +57,25 @@ public class ColorUtil {
             return new int[]{255,0,0};
         }
         int[] rgb = new int[3];
-        double scale =red/4;//浓度区间四分
-        // 区间一
+        double scale =red/4.0;//浓度区间四分
         if(value < scale){
             rgb[0] = 0;
             rgb[1] = (int)(value*255/scale);
             rgb[2] = 255;
-        }
-        // 区间二
-        if(value >= scale && value < (2*scale)){
+        } else if(value >= scale && value < (2*scale)){
             rgb[0] = 0;
             rgb[1] = 255;
             rgb[2] = (int) (255-(value-scale)*255/scale);
-        }
-        // 区间三
-        if(value >= (2*scale) && value < (3*scale)){
+        } else if(value >= (2*scale) && value < (3*scale)){
             rgb[0] = (int) ((value-2*scale)*255/scale);
             rgb[1] = 255;
             rgb[2] = 0;
-        }
-        // 区间四
-        if(value >= (3*scale) && value < (4*scale)){
+        } else if(value >= (3*scale) && value < (4*scale)){
             rgb[0] = 255;
             rgb[1] = (int) (255-(value-3*scale)*255/scale);
             rgb[2] = 0;
+        } else {
+            return new int[]{255,0,0};
         }
         return rgb;
     }

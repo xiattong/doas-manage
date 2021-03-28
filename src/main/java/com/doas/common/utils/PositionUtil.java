@@ -67,17 +67,9 @@ public class PositionUtil {
         return ret;
     }
 
-    public static void main(String[] args) {
-        //116.46706996,39.99188446 -> 116.473207,39.993202
-        List<Object> data = new ArrayList<>();
-        data.add("116.46706996");
-        data.add("39.99188446");
-        System.out.println((PositionUtil.convertList(data)));
-    }
-
-    public static double[] convertList(List<Object> data){
+    public static double[] convertList(List<String> data){
         double[] gps = PositionUtil.gps84_To_Gcj02(
-                Double.parseDouble(data.get(0).toString()),Double.parseDouble(data.get(1).toString()));
+                Double.parseDouble(data.get(0)),Double.parseDouble(data.get(1)));
         return gps;
     }
 }
