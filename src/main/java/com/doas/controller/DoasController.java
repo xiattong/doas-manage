@@ -35,6 +35,12 @@ public class DoasController implements InitializingBean {
     @Value("${map-type}")
     private String mapType;
 
+    @Value("${red-list}")
+    private String defaultRedList;
+
+    @Value("${red-scale}")
+    private String redScale;
+
     @Resource
     private DataReadThread dataReadThread;
 
@@ -56,13 +62,20 @@ public class DoasController implements InitializingBean {
     public ResultObject initData(@RequestBody Map<String, String> param) {
         log.info("param:"+ JSON.toJSONString(param));
         String dataType = param.get("dataType");
+
         String extractNum = param.get("extractNum");
-        String currentFileName = param.get("currentFileName");
-        String specifiedRedList = param.get("redList");
-        dataReadThread.setCurrentFileName(currentFileName);
         if (StringUtils.isEmpty(extractNum)) {
             extractNum = "0";
         }
+
+        String currentFileName = param.get("currentFileName");
+        dataReadThread.setCurrentFileName(currentFileName);
+
+        String redList = param.get("redList");
+        if(StringUtils.isEmpty(redList)){
+            redList = defaultRedList;
+        }
+
         List<List<String>> dataList = dataReadThread.getDataList();
         Map<String, Object> resultMap = new HashMap<>();
         if (dataList.size() <= 1) {
@@ -72,7 +85,7 @@ public class DoasController implements InitializingBean {
             if ("chart".equals(dataType)) {
                 resultMap = dataParseChart(dataList);
             } else if("map-line".equals(dataType) || "map-wall".equals(dataType)) {
-                resultMap = dataParseMap(dataList,specifiedRedList);
+                resultMap = dataParseMap(dataList,redList);
             }
         } catch (Exception e) {
             log.error(e.getMessage());
@@ -198,7 +211,10 @@ public class DoasController implements InitializingBean {
         }
 
         //遍历解析数据
-        redList = redList.stream().map(item -> Integer.valueOf(item * 3 / 4 )).collect(Collectors.toList());
+        if(StringUtils.isEmpty(redScale)){
+            redScale = "1";
+        }
+        redList = redList.stream().map(item -> (int)(item * Double.parseDouble(redScale))).collect(Collectors.toList());
         for(int k = 0 ; k < dataList.size() ; k ++){
             List<String> row = dataList.get(k);
             //保存数值的数据
@@ -253,7 +269,21 @@ public class DoasController implements InitializingBean {
         resultMap.put("colors", colors.toArray());
         resultMap.put("coordinates", coordinates.toArray());
         resultMap.put("systemState",systemState);
-        resultMap.put("redList",redList.toArray());
+        resultMap.put("redList",redList);
+        resultMap.put("redListStr",listToString(redList,','));
         return resultMap;
     }
+
+    // 方法四
+    public static String listToString(List list, char separator) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < list.size(); i++) {
+            sb.append(list.get(i));
+            if (i < list.size() - 1) {
+                sb.append(separator);
+            }
+        }
+        return sb.toString();
+    }
+
 }
