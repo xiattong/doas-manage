@@ -129,6 +129,7 @@ public class DoasController implements InitializingBean {
                 //存储因子
                 List<String> cells = v.subList(1, v.size() - 5);
                 resultMap.put("factors", cells.toArray());
+                resultMap.put("factorColors", ColorUtil.getVariantColors(cells.toArray().length));
                 for (int i = 0; i < cells.size(); i++) {
                     data.add(new ArrayList<>());
                     realTimeData.add(cells.get(i) + "");

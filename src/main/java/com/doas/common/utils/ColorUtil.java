@@ -1,6 +1,8 @@
 package com.doas.common.utils;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * 颜色处理工具类
@@ -8,10 +10,16 @@ import java.math.BigDecimal;
  */
 public class ColorUtil {
 
-    // 初始化一个7种颜色的二维数组 : 黄、绿、青、蓝、紫、橙、红
-    private static int[][] rainbow = {
-            {255,255,0},{0,255,0},{	0,255,255},{0,0,255},{255,0,255},{255,69,0},{255,0,0}
-    };
+
+    private static List<String> defaultColors = Arrays.asList(
+            "#ed1299", "#09f9f5", "#246b93", "#cc8e12", "#d561dd", "#c93f00", "#925bea", "#63ff4f",
+            "#280f7a", "#6373ed", "#5b910f" ,"#dd27ce", "#07a301", "#167275", "#391c82", "#2baeb5",
+            "#4aef7b", "#e86502", "#9ed84e", "#39ba30", "#6ad157", "#8249aa", "#99db27", "#e07233",
+            "#ce2523", "#f7aa5d", "#cebb10", "#03827f", "#931635", "#373bbf", "#a1ce4c", "#ef3bb6",
+            "#1a918f", "#ff66fc", "#2927c4", "#7149af" ,"#57e559" ,"#8e3af4", "#f9a270" ,"#22547f",
+            "#edd05e", "#6f25e8", "#0dbc21", "#7b34c1" ,"#0cf29a" ,"#d80fc1", "#ff523f", "#db5e92", "#d66551"
+    );
+
 
     /**
      * 颜色转换（方案一）
@@ -33,20 +41,6 @@ public class ColorUtil {
         rgb[1] = (convertInt & 0xff00) >> 8;
         rgb[2] = (convertInt & 0xff);
         return rgb;
-    }
-
-    /**
-     * 颜色转换（方案二）
-     * 按照数值，在colorRainbow中选
-     * @param value ：待转换颜色值
-     * @param scale ：色域值
-     */
-    public static int[] convertP2(double value,int scale) {
-        int colorIdx = (int)(value/scale);
-        if(colorIdx > 6){
-            colorIdx = 6;
-        }
-        return rainbow[colorIdx];
     }
 
     /**
@@ -80,7 +74,6 @@ public class ColorUtil {
         return rgb;
     }
 
-
     /**
      * RGB 颜色转 VertexColor
      * @param value
@@ -95,5 +88,19 @@ public class ColorUtil {
             vertexColors[i] = temp.setScale(4,BigDecimal.ROUND_HALF_UP).doubleValue();
         }
         return vertexColors;
+    }
+
+    /**
+     * 从默认颜色中挑颜色
+     * @param size
+     * @return
+     */
+    public static String[] getVariantColors(int size) {
+        String[] colors = new String[size];
+       int defaultColorSize = defaultColors.size();
+       for (int i = 0 ; i < size ; i++) {
+           colors[i] = defaultColors.get(i % defaultColorSize);
+       }
+       return colors;
     }
 }
