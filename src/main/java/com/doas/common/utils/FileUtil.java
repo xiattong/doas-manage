@@ -1,5 +1,8 @@
 package com.doas.common.utils;
 
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.StringUtils;
+
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
@@ -11,6 +14,7 @@ import java.util.List;
  * 文件读取工具类
  *  @author xiattong
  */
+@Slf4j
 public class FileUtil implements FilenameFilter {
 
     // 接受的文件类型，小写
@@ -64,9 +68,21 @@ public class FileUtil implements FilenameFilter {
             Arrays.sort(files, new Comparator<File>() {
                 @Override
                 public int compare(File file1, File file2) {
-                    //return (int) (file2.lastModified() - file1.lastModified());
-                    String file2Name = file2.getName().substring(0, file2.getName().lastIndexOf("."));
-                    String file1Name = file1.getName().substring(0, file1.getName().lastIndexOf("."));
+                    String file2Name = null;
+                    String file1Name = null;
+                    if (file2.getName().lastIndexOf(".") > 0) {
+                        file2Name = file2.getName().substring(0, file2.getName().lastIndexOf("."));
+                    } else {
+                        file2Name = file2.getName();
+                    }
+                    if (file1.getName().lastIndexOf(".") > 0) {
+                        file1Name = file1.getName().substring(0, file1.getName().lastIndexOf("."));
+                    } else {
+                        file1Name = file1.getName();
+                    }
+                    if (StringUtils.isEmpty(file2Name) || StringUtils.isEmpty(file1Name)) {
+                        return 1;
+                    }
                     return (int) (Long.parseLong(file2Name) - Long.parseLong(file1Name));
                 }
             });
