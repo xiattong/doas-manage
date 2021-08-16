@@ -68,22 +68,28 @@ public class FileUtil implements FilenameFilter {
             Arrays.sort(files, new Comparator<File>() {
                 @Override
                 public int compare(File file1, File file2) {
-                    String file2Name = null;
-                    String file1Name = null;
-                    if (file2.getName().lastIndexOf(".") > 0) {
-                        file2Name = file2.getName().substring(0, file2.getName().lastIndexOf("."));
-                    } else {
-                        file2Name = file2.getName();
-                    }
-                    if (file1.getName().lastIndexOf(".") > 0) {
-                        file1Name = file1.getName().substring(0, file1.getName().lastIndexOf("."));
-                    } else {
-                        file1Name = file1.getName();
-                    }
-                    if (StringUtils.isEmpty(file2Name) || StringUtils.isEmpty(file1Name)) {
+                    try {
+                        String file2Name = null;
+                        String file1Name = null;
+                        if (file2.getName().lastIndexOf(".") > 0) {
+                            file2Name = file2.getName().substring(0, file2.getName().lastIndexOf("."));
+                        } else {
+                            file2Name = file2.getName();
+                        }
+                        if (file1.getName().lastIndexOf(".") > 0) {
+                            file1Name = file1.getName().substring(0, file1.getName().lastIndexOf("."));
+                        } else {
+                            file1Name = file1.getName();
+                        }
+                        if (StringUtils.isEmpty(file2Name) || StringUtils.isEmpty(file1Name)) {
+                            return 1;
+                        }
+                        return (int) (Long.parseLong(file2Name) - Long.parseLong(file1Name));
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        log.error("Error ! FileUtil#getSortedFiles: {}", e.getMessage());
                         return 1;
                     }
-                    return (int) (Long.parseLong(file2Name) - Long.parseLong(file1Name));
                 }
             });
             return files;

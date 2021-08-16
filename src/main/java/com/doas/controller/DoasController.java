@@ -68,7 +68,7 @@ public class DoasController implements InitializingBean {
             extractNum = "0";
         }
 
-        String currentFileName = param.get("currentFileName");
+        String currentFileName = Objects.isNull(param.get("currentFileName")) ? "" : param.get("currentFileName");
         dataReadThread.setCurrentFileName(currentFileName);
 
         String redList = param.get("redList");
@@ -125,9 +125,10 @@ public class DoasController implements InitializingBean {
         //遍历解析数据
         for(int k = 0 ; k < dataList.size() ; k ++){
             List<String> v = dataList.get(k);
+            //存储因子
+            List<String> cells = v.subList(1, v.size() - 5);
             if(k == 0) {
-                //存储因子
-                List<String> cells = v.subList(1, v.size() - 5);
+
                 resultMap.put("factors", cells.toArray());
                 resultMap.put("factorColors", ColorUtil.getVariantColors(cells.toArray().length));
                 for (int i = 0; i < cells.size(); i++) {
@@ -135,11 +136,18 @@ public class DoasController implements InitializingBean {
                     realTimeData.add(cells.get(i) + "");
                 }
             } else {
+                //舍弃数值为0的数据
+                int sumCellValue = 0;
+                for (int i = 0; i < cells.size(); i++) {
+                    sumCellValue = sumCellValue + Integer.parseInt(cells.get(i));
+                }
+                if(sumCellValue <= 0){
+                    continue;
+                }
                 //存储横坐标-时间
                 xAxis.add(v.get(0));
                 //存储数值
                 boolean lastRow = (k == dataList.size() - 1);
-                List<String> cells = v.subList(1, v.size() - 5);
                 for (int i = 0; i < cells.size(); i++) {
                     data.get(i).add(cells.get(i));
                     // 最后一行数据,用于在面板上展示

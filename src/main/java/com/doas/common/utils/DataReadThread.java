@@ -59,7 +59,6 @@ public class DataReadThread extends Thread {
                     && this.fileNameList.contains(this.currentFileName)){
                 filePath = filePath +"/"+this.currentFileName;
             }else{
-                setCurrentFileName(this.fileNameList.get(0));
                 filePath = filePath +"/"+this.fileNameList.get(0);
 
             }
@@ -98,6 +97,7 @@ public class DataReadThread extends Thread {
                             // 保存当前行号
                             this.currentLineNo = slideIndex;
                         }
+                        log.info("Read the source file " + fileName + " tempDataList：" + tempDataList.size());
                         this.dataList.addAll(tempDataList);
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -118,15 +118,13 @@ public class DataReadThread extends Thread {
     }
 
     public void setCurrentFileName(String currentFileName){
-        if(!StringUtils.isEmpty(currentFileName)){
-            if(!StringUtils.isEmpty(this.currentFileName) && !this.currentFileName.equals(currentFileName)){
-                // 当读取的文件发生变化时，重新开始读取文件
-                this.currentLineNo = 0;
-                this.dataList.clear();
-                log.info("The source file has changed,reset the currentLineNo values to 0 ：{} -> {},",this.currentFileName,currentFileName);
-            }
-            this.currentFileName = currentFileName;
+        if(!this.currentFileName.equals(currentFileName)){
+            // 当读取的文件发生变化时，重新开始读取文件
+            this.currentLineNo = 0;
+            this.dataList.clear();
+            log.info("The source file has changed,reset the currentLineNo values to 0 ：{} -> {},",this.currentFileName,currentFileName);
         }
+        this.currentFileName = currentFileName;
     }
 
     public List<List<String>> getDataList() {
