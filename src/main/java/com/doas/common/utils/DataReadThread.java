@@ -43,6 +43,8 @@ public class DataReadThread extends Thread {
     private int cellsNum = 0;
     /** 当前读取到的行号*/
     private int currentLineNo = 0;
+    /** 读取 n 秒内的文件*/
+    private int fileValidSeconds;
 
     /**
      * 读取txt线程
@@ -131,19 +133,11 @@ public class DataReadThread extends Thread {
         return dataList;
     }
 
-    public void setDataList(List<List<String>> dataList) {
-        this.dataList = dataList;
+    public void setFileValidSeconds(int fileValidSeconds) {
+        this.fileValidSeconds = fileValidSeconds;
     }
 
     public List<String> getFileNameList() {
         return fileNameList;
-    }
-
-    public void setFileNameList(List<String> fileNameList) {
-        this.fileNameList = fileNameList;
-    }
-
-    public int getCurrentLineNo() {
-        return currentLineNo;
     }
 }

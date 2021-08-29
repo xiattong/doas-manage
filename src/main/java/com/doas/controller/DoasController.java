@@ -5,6 +5,7 @@ import com.doas.common.utils.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -61,15 +62,21 @@ public class DoasController implements InitializingBean {
     @PostMapping("/initData")
     public ResultObject initData(@RequestBody Map<String, String> param) {
         log.info("param:"+ JSON.toJSONString(param));
+
         String dataType = param.get("dataType");
 
         String extractNum = param.get("extractNum");
         if (StringUtils.isEmpty(extractNum)) {
             extractNum = "0";
         }
+        String fileValidSeconds = param.get("fileValidSeconds");
+        if (StringUtils.isEmpty(fileValidSeconds)) {
+            fileValidSeconds = "0";
+        }
 
         String currentFileName = Objects.isNull(param.get("currentFileName")) ? "" : param.get("currentFileName");
         dataReadThread.setCurrentFileName(currentFileName);
+        dataReadThread.setFileValidSeconds(Integer.parseInt(fileValidSeconds));
 
         String redList = param.get("redList");
         if(StringUtils.isEmpty(redList)){
@@ -117,9 +124,15 @@ public class DoasController implements InitializingBean {
         //横坐标-时间
         List<String> xAxis = new ArrayList<>();
         //数值-曲线数据
-        List<List<Object>> data = new ArrayList<>();
+        List<List<String>> data = new ArrayList<>();
         //实时数据
         List<String> realTimeData = new ArrayList<>();
+        //平均值
+        List<String> averageData = new ArrayList<>();
+        //最大值
+        List<String> maxData = new ArrayList<>();
+        //最小值
+        List<String> minData = new ArrayList<>();
         //系统状态
         String[] systemState = new String[2];
         //遍历解析数据
@@ -128,7 +141,6 @@ public class DoasController implements InitializingBean {
             //存储因子
             List<String> cells = v.subList(1, v.size() - 5);
             if(k == 0) {
-
                 resultMap.put("factors", cells.toArray());
                 resultMap.put("factorColors", ColorUtil.getVariantColors(cells.toArray().length));
                 for (int i = 0; i < cells.size(); i++) {
@@ -152,8 +164,7 @@ public class DoasController implements InitializingBean {
                     data.get(i).add(cells.get(i));
                     // 最后一行数据,用于在面板上展示
                     if (lastRow) {
-                        realTimeData.set(i, realTimeData.get(i) + " : "
-                                + cells.get(i) + " " + v.get(v.size() - 3));
+                        realTimeData.set(i, cells.get(i));
                     }
                 }
                 if (lastRow) {
@@ -163,10 +174,30 @@ public class DoasController implements InitializingBean {
                 }
             }
         }
+        // 求平均值、最大值、最小值
+        if (!CollectionUtils.isEmpty(data)) {
+            for (List<String> itemData : data ) {
+                if (CollectionUtils.isEmpty(itemData)) {
+                    // 如果有一项没有值，就不统计
+                    break;
+                }
+                DoubleSummaryStatistics statistics = itemData.stream().mapToDouble(x -> Double.parseDouble(x)).summaryStatistics();
+                // 平均值
+                averageData.add(MathUtil.roundHalfUp(statistics.getAverage()) + "");
+                // 最大值
+                maxData.add(MathUtil.roundHalfUp(statistics.getMax()) + "");
+                // 最小值
+                minData.add(MathUtil.roundHalfUp(statistics.getMin()) + "");
+            }
+        }
+
         resultMap.put("xAxis", xAxis.toArray());
         resultMap.put("data", data.toArray());
         resultMap.put("latestTime", xAxis.get(xAxis.size() - 1));
-        resultMap.put("realTimeData", String.join(" 、", realTimeData));
+        resultMap.put("realTimeData", realTimeData);
+        resultMap.put("averageData", averageData);
+        resultMap.put("maxData", maxData);
+        resultMap.put("minData", minData);
         resultMap.put("systemState",systemState);
         return resultMap;
     }
