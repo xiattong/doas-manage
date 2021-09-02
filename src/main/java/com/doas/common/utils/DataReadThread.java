@@ -37,14 +37,41 @@ public class DataReadThread extends Thread {
     private List<List<String>> dataList = new ArrayList<>();
     /** 文件列表*/
     private List<String> fileNameList;
-    /** 当前读取的文件名称*/
+    /** 当前请求读取的文件名称*/
     private String currentFileName = "";
+    /** 当前实际读取的文件名*/
+    private String actualCurrentFileName = "";
     /** 行的列数*/
     private int cellsNum = 0;
     /** 当前读取到的行号*/
     private int currentLineNo = 0;
-    /** 读取 n 秒内的文件*/
-    private int fileValidSeconds;
+
+
+    /**
+     * 控制读取文件的刷新
+     * @param actualCurrentFileName
+     */
+    public void setActualCurrentFileName(String actualCurrentFileName) {
+        if (StringUtils.isEmpty(this.actualCurrentFileName)) {
+            this.actualCurrentFileName = actualCurrentFileName;
+        } else {
+            if (!this.actualCurrentFileName.equals(actualCurrentFileName)) {
+                // 当读取的文件发生变化时，重新开始读取文件
+                this.currentLineNo = 0;
+                this.dataList.clear();
+                log.info("The source file has changed, {} -> {},",this.currentFileName,currentFileName);
+                this.actualCurrentFileName = actualCurrentFileName;
+            }
+        }
+    }
+
+    /**
+     * 当前读取的文件名称
+     * @param currentFileName
+     */
+    public void setCurrentFileName(String currentFileName){
+        this.currentFileName = currentFileName;
+    }
 
     /**
      * 读取txt线程
@@ -59,10 +86,12 @@ public class DataReadThread extends Thread {
             String filePath = this.excelFilePath;
             if(!StringUtils.isEmpty(this.currentFileName)
                     && this.fileNameList.contains(this.currentFileName)){
+                // 指定文件
                 filePath = filePath +"/"+this.currentFileName;
+                setActualCurrentFileName(this.currentFileName);
             }else{
                 filePath = filePath +"/"+this.fileNameList.get(0);
-
+                setActualCurrentFileName(this.fileNameList.get(0));
             }
             File file = new File(filePath);
             this.cellsNum = 0;
@@ -70,7 +99,6 @@ public class DataReadThread extends Thread {
                 String fileName = file.getName();
                 long len = file.length();
                 if (len > 0) {
-                    log.info("Read the source file " + fileName + " : " + len);
                     byte[] ds = new byte[(int) len];
                     try {
                         MappedByteBuffer mappedByteBuffer = new RandomAccessFile(file, "r")
@@ -119,22 +147,8 @@ public class DataReadThread extends Thread {
         }
     }
 
-    public void setCurrentFileName(String currentFileName){
-        if(!this.currentFileName.equals(currentFileName)){
-            // 当读取的文件发生变化时，重新开始读取文件
-            this.currentLineNo = 0;
-            this.dataList.clear();
-            log.info("The source file has changed,reset the currentLineNo values to 0 ：{} -> {},",this.currentFileName,currentFileName);
-        }
-        this.currentFileName = currentFileName;
-    }
-
     public List<List<String>> getDataList() {
         return dataList;
-    }
-
-    public void setFileValidSeconds(int fileValidSeconds) {
-        this.fileValidSeconds = fileValidSeconds;
     }
 
     public List<String> getFileNameList() {

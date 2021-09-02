@@ -49,7 +49,6 @@ public class DoasController implements InitializingBean {
     public void afterPropertiesSet() throws Exception {
         //启动文件读取线程
         dataReadThread.start();
-        log.info("File reader thread started successfully!");
     }
 
     /**
@@ -69,14 +68,9 @@ public class DoasController implements InitializingBean {
         if (StringUtils.isEmpty(extractNum)) {
             extractNum = "0";
         }
-        String fileValidSeconds = param.get("fileValidSeconds");
-        if (StringUtils.isEmpty(fileValidSeconds)) {
-            fileValidSeconds = "0";
-        }
 
         String currentFileName = Objects.isNull(param.get("currentFileName")) ? "" : param.get("currentFileName");
         dataReadThread.setCurrentFileName(currentFileName);
-        dataReadThread.setFileValidSeconds(Integer.parseInt(fileValidSeconds));
 
         String redList = param.get("redList");
         if(StringUtils.isEmpty(redList)){
