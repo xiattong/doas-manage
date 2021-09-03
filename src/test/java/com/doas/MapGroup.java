@@ -17,11 +17,13 @@ public class MapGroup {
         //data.add("1-c");
         data.add("m-n");
 
-        data.forEach(item->{
+        System.out.println(JSONArray.toJSONString(data.subList(0,2)));
+
+        /*data.forEach(item->{
             joinGroup(groups,item);
         });
 
-        System.out.println(JSONArray.toJSONString(groups));
+        System.out.println(JSONArray.toJSONString(groups));*/
     }
 
     /**

@@ -59,6 +59,10 @@ public class FileUtil implements FilenameFilter {
                 }
             }
         }
+        // 最多只取20个文件
+        if (fileNameList.size() > 20) {
+            fileNameList = fileNameList.subList(0,20);
+        }
         return fileNameList;
     }
 
