@@ -45,33 +45,10 @@ public class DataReadThread extends Thread {
     private int cellsNum = 0;
     /** 当前读取到的行号*/
     private int currentLineNo = 0;
-
-
-    /**
-     * 控制读取文件的刷新
-     * @param actualCurrentFileName
-     */
-    public void setActualCurrentFileName(String actualCurrentFileName) {
-        if (StringUtils.isEmpty(this.actualCurrentFileName)) {
-            this.actualCurrentFileName = actualCurrentFileName;
-        } else {
-            if (!this.actualCurrentFileName.equals(actualCurrentFileName)) {
-                // 当读取的文件发生变化时，重新开始读取文件
-                this.currentLineNo = 0;
-                this.dataList.clear();
-                log.info("The source file has changed, {} -> {},",this.currentFileName,currentFileName);
-                this.actualCurrentFileName = actualCurrentFileName;
-            }
-        }
-    }
-
-    /**
-     * 当前读取的文件名称
-     * @param currentFileName
-     */
-    public void setCurrentFileName(String currentFileName){
-        this.currentFileName = currentFileName;
-    }
+    /** 时间段-开始*/
+    private String timeStart;
+    /** 时间段-结束*/
+    private String timeEnd;
 
     /**
      * 读取txt线程
@@ -115,13 +92,21 @@ public class DataReadThread extends Thread {
                         while (scan.hasNext()) {
                             String[] lines = scan.next().split("\r\n");
                             lineNum = lineNum + lines.length;
+                            boolean markBreak = false;
                             for ( ;slideIndex < lineNum; slideIndex++) {
                                 String line = lines[slideIndex];
                                 if (this.cellsNum == 0) {
                                     tempDataList.add(Arrays.asList(line.split("~")));
                                     this.cellsNum = tempDataList.get(0).size();
                                 } else if (line.split("~").length == this.cellsNum) {
-                                    tempDataList.add(Arrays.asList(line.split("~")));
+                                    // 加入时间段判断
+                                    String[] lineArray = line.split("~");
+                                    if (DateUtil.isBetweenDateTime(lineArray[0], this.timeStart, this.timeEnd)) {
+                                        tempDataList.add(Arrays.asList(lineArray));
+                                        markBreak = true;
+                                    } else if (markBreak) {
+                                        break;
+                                    }
                                 }
                             }
                             // 保存当前行号
@@ -147,11 +132,45 @@ public class DataReadThread extends Thread {
         }
     }
 
+    /**
+     * 控制读取文件的刷新
+     * @param actualCurrentFileName
+     */
+    public void setActualCurrentFileName(String actualCurrentFileName) {
+        if (StringUtils.isEmpty(this.actualCurrentFileName)) {
+            this.actualCurrentFileName = actualCurrentFileName;
+        } else {
+            if (!this.actualCurrentFileName.equals(actualCurrentFileName)) {
+                // 当读取的文件发生变化时，重新开始读取文件
+                this.currentLineNo = 0;
+                this.dataList.clear();
+                log.info("The source file has changed, {} -> {},",this.currentFileName,currentFileName);
+                this.actualCurrentFileName = actualCurrentFileName;
+            }
+        }
+    }
+
+    /**
+     * 当前读取的文件名称
+     * @param currentFileName
+     */
+    public void setCurrentFileName(String currentFileName){
+        this.currentFileName = currentFileName;
+    }
+
     public List<List<String>> getDataList() {
         return dataList;
     }
 
     public List<String> getFileNameList() {
         return fileNameList;
+    }
+
+    public void setTimeStart(String timeStart) {
+        this.timeStart = timeStart;
+    }
+
+    public void setTimeEnd(String timeEnd) {
+        this.timeEnd = timeEnd;
     }
 }

@@ -62,13 +62,19 @@ public class DoasController implements InitializingBean {
     public ResultObject initData(@RequestBody Map<String, String> param) {
         log.info("param:"+ JSON.toJSONString(param));
 
+        //请求的数据模型 chart 曲线; map-line 地图（柱线）; map-wall 地图（柱面）
         String dataType = param.get("dataType");
-
         String extractNum = param.get("extractNum");
         if (StringUtils.isEmpty(extractNum)) {
             extractNum = "0";
         }
-
+        /** 时间段-开始*/
+        String timeStart = param.get("timeStart");;
+        dataReadThread.setTimeStart(timeStart);
+        /** 时间段-结束*/
+        String timeEnd = param.get("timeEnd");
+        dataReadThread.setTimeEnd(timeEnd);
+        /** 当前读取的文件名称*/
         String currentFileName = Objects.isNull(param.get("currentFileName")) ? "" : param.get("currentFileName");
         dataReadThread.setCurrentFileName(currentFileName);
 
@@ -95,8 +101,7 @@ public class DoasController implements InitializingBean {
         }
         ResultObject result = ResultObject.ok();
         try {
-            resultMap.put("companyName",new String(companyName.getBytes
-                    ("iso-8859-1"), "UTF-8"));
+            resultMap.put("companyName",new String(companyName.getBytes("iso-8859-1"), "UTF-8"));
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
             resultMap.put("companyName",companyName);
@@ -217,18 +222,18 @@ public class DoasController implements InitializingBean {
         //保存各因子 red 值的列表
         List<Integer> redList = new ArrayList<>();
         //计算redList
-        for(int k = 0 ; k < dataList.size() ; k ++){
+        for (int k = 0 ; k < dataList.size() ; k ++) {
             List<String> row = dataList.get(k);
             //保存数值的数据
             List<String> cells = row.subList(1, row.size() - 5);
             //解析指定的色等值
-            if(!StringUtils.isEmpty(specifiedRedList) && specifiedRedList.split(",").length == cells.size()){
+            if (!StringUtils.isEmpty(specifiedRedList) && specifiedRedList.split(",").length == cells.size()) {
                 List<String> redListStr = Arrays.asList(specifiedRedList.split(","));
                 redList = redListStr.stream().map(item -> Integer.parseInt(item)).collect(Collectors.toList());
                 break;
             }
-            //色登值未指定，需要计算
-            if(k == 0) {
+            //色等值未指定，需要计算
+            if (k == 0) {
                 //初始化
                 for (int i = 0; i < cells.size(); i++) {
                     redList.add(0);
@@ -236,9 +241,9 @@ public class DoasController implements InitializingBean {
             } else {
                 for (int i = 0; i < cells.size(); i++) {
                     int cellValue = Integer.parseInt(cells.get(i));
-                    //修改redList,使redList中的值保持最大
-                    if(redList.get(i) < cellValue){
-                        redList.set(i,cellValue);
+                    //修改 redList,使 redList 中的值保持最大
+                    if (redList.get(i) < cellValue) {
+                        redList.set(i, cellValue);
                     }
                 }
             }
@@ -249,11 +254,11 @@ public class DoasController implements InitializingBean {
             redScale = "1";
         }
         redList = redList.stream().map(item -> (int)(item * Double.parseDouble(redScale))).collect(Collectors.toList());
-        for(int k = 0 ; k < dataList.size() ; k ++){
+        for (int k = 0 ; k < dataList.size() ; k ++) {
             List<String> row = dataList.get(k);
             //保存数值的数据
             List<String> cells = row.subList(1, row.size() - 5);
-            if(k == 0) {
+            if (k == 0) {
                 //存储因子
                 resultMap.put("factors", cells.toArray());
                 //初始化
