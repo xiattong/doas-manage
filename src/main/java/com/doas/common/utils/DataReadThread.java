@@ -45,10 +45,9 @@ public class DataReadThread extends Thread {
     private int cellsNum = 0;
     /** 当前读取到的行号*/
     private int currentLineNo = 0;
-    /** 时间段-开始*/
-    private String timeStart;
-    /** 时间段-结束*/
-    private String timeEnd;
+    /** 时间段*/
+    private String timeRange = "";
+
 
     /**
      * 读取txt线程
@@ -101,7 +100,7 @@ public class DataReadThread extends Thread {
                                 } else if (line.split("~").length == this.cellsNum) {
                                     // 加入时间段判断
                                     String[] lineArray = line.split("~");
-                                    if (DateUtil.isBetweenDateTime(lineArray[0], this.timeStart, this.timeEnd)) {
+                                    if (DateUtil.isBetweenDateTimeRange(lineArray[0], this.timeRange)) {
                                         tempDataList.add(Arrays.asList(lineArray));
                                         markBreak = true;
                                     } else if (markBreak) {
@@ -142,8 +141,7 @@ public class DataReadThread extends Thread {
         } else {
             if (!this.actualCurrentFileName.equals(actualCurrentFileName)) {
                 // 当读取的文件发生变化时，重新开始读取文件
-                this.currentLineNo = 0;
-                this.dataList.clear();
+                refresh();
                 log.info("The source file has changed, {} -> {},",this.currentFileName,currentFileName);
                 this.actualCurrentFileName = actualCurrentFileName;
             }
@@ -166,11 +164,20 @@ public class DataReadThread extends Thread {
         return fileNameList;
     }
 
-    public void setTimeStart(String timeStart) {
-        this.timeStart = timeStart;
+    public void setTimeRange(String timeRange) {
+        if (!timeRange.equals(this.timeRange)) {
+            refresh();
+        }
+        this.timeRange = timeRange;
     }
 
-    public void setTimeEnd(String timeEnd) {
-        this.timeEnd = timeEnd;
+
+
+    /**
+     * 刷新缓存，重新读取文件
+     */
+    private void refresh() {
+        this.currentLineNo = 0;
+        this.dataList.clear();
     }
 }

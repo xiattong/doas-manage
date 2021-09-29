@@ -43,7 +43,7 @@ public class DateUtil {
      * @param endDate
      * @return
      */
-    public static boolean isBetweenDateTime(String dateTime, String startDate, String endDate) {
+    public static boolean isBetweenTime(String dateTime, String startDate, String endDate) {
         SimpleDateFormat sdf = new SimpleDateFormat(TIME_PATTERN);
         try {
             if (!StringUtils.isEmpty(startDate) && sdf.parse(dateTime).before(sdf.parse(startDate))) {
@@ -55,21 +55,18 @@ public class DateUtil {
         }
     }
 
-    public static void main(String[] args) {
-        System.out.println(isBetweenDateTime("2:00:00", null, "3:00:00"));
 
-        System.out.println(isBetweenDateTime("2:00:00", "1:00:00", null));
-
-        System.out.println(isBetweenDateTime("2:00:00", null, null));
-
-        System.out.println(isBetweenDateTime("2:00:00", "1:00:00", "3:00:00"));
-
-
-
-        System.out.println(isBetweenDateTime("2:00:00", null, "1:00:00"));
-
-        System.out.println(isBetweenDateTime("2:00:00", "3:00:00", null));
-
-        System.out.println(isBetweenDateTime("2:00:00", "3:00:00", "1:00:00"));
+    /**
+     * 时间是否在指定时间段内
+     * @param dateTime
+     * @param timeRange
+     * @return
+     */
+    public static boolean isBetweenDateTimeRange(String dateTime, String timeRange) {
+        String[] timeRangeArray = timeRange.split("-");
+        if (timeRangeArray.length != 2) {
+            return true;
+        }
+        return isBetweenTime(dateTime, timeRangeArray[0].trim(), timeRangeArray[1].trim());
     }
 }

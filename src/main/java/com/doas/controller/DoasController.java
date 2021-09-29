@@ -68,12 +68,10 @@ public class DoasController implements InitializingBean {
         if (StringUtils.isEmpty(extractNum)) {
             extractNum = "0";
         }
-        /** 时间段-开始*/
-        String timeStart = param.get("timeStart");;
-        dataReadThread.setTimeStart(timeStart);
-        /** 时间段-结束*/
-        String timeEnd = param.get("timeEnd");
-        dataReadThread.setTimeEnd(timeEnd);
+        /** 时间段*/
+        String timeRange = param.get("timeRange");;
+        dataReadThread.setTimeRange(timeRange);
+
         /** 当前读取的文件名称*/
         String currentFileName = Objects.isNull(param.get("currentFileName")) ? "" : param.get("currentFileName");
         dataReadThread.setCurrentFileName(currentFileName);
@@ -82,32 +80,33 @@ public class DoasController implements InitializingBean {
         if(StringUtils.isEmpty(redList)){
             redList = defaultRedList;
         }
-
         List<List<String>> dataList = dataReadThread.getDataList();
+
+        ResultObject result = ResultObject.basic();
         Map<String, Object> resultMap = new HashMap<>();
-        if (dataList.size() <= 1) {
-            return ResultObject.error("没有数据!");
-        }
-        try {
-            if ("chart".equals(dataType)) {
-                resultMap = dataParseChart(dataList);
-            } else if("map-line".equals(dataType) || "map-wall".equals(dataType)) {
-                resultMap = dataParseMap(dataList,redList);
-            }
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            e.printStackTrace();
-            return ResultObject.error(e.getMessage());
-        }
-        ResultObject result = ResultObject.ok();
+        resultMap.put("mapType",mapType);
+        resultMap.put("fileNameList",dataReadThread.getFileNameList());
         try {
             resultMap.put("companyName",new String(companyName.getBytes("iso-8859-1"), "UTF-8"));
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
             resultMap.put("companyName",companyName);
         }
-        resultMap.put("mapType",mapType);
-        resultMap.put("fileNameList",dataReadThread.getFileNameList());
+        // 有数据时
+        if (dataList.size() > 1) {
+            try {
+                if ("chart".equals(dataType)) {
+                    dataParseChart(dataList, resultMap);
+                } else if ("map-line".equals(dataType) || "map-wall".equals(dataType)) {
+                    dataParseMap(dataList, redList, resultMap);
+                }
+                ResultObject.setOk(result);
+            } catch (Exception e) {
+                log.error(e.getMessage());
+                e.printStackTrace();
+                return ResultObject.error(e.getMessage());
+            }
+        }
         result.put("result", resultMap);
         return result;
     }
@@ -118,8 +117,7 @@ public class DoasController implements InitializingBean {
      * @param dataList
      * @return
      */
-    private Map<String, Object> dataParseChart(List<List<String>> dataList) {
-        Map<String, Object> resultMap = new HashMap<>();
+    private void dataParseChart(List<List<String>> dataList, Map<String, Object> resultMap) {
         //横坐标-时间
         List<String> xAxis = new ArrayList<>();
         //数值-曲线数据
@@ -198,7 +196,6 @@ public class DoasController implements InitializingBean {
         resultMap.put("maxData", maxData);
         resultMap.put("minData", minData);
         resultMap.put("systemState",systemState);
-        return resultMap;
     }
 
     /**
@@ -208,8 +205,7 @@ public class DoasController implements InitializingBean {
      * @param specifiedRedList 指定的
      * @return
      */
-    private Map<String, Object> dataParseMap(List<List<String>> dataList,String specifiedRedList) {
-        Map<String, Object> resultMap = new HashMap<>();
+    private void dataParseMap(List<List<String>> dataList,String specifiedRedList, Map<String, Object> resultMap) {
         //数值-高度
         List<List<Object>> data = new ArrayList<>();
         List<List<Object>> dataHigh = new ArrayList<>();
@@ -310,7 +306,6 @@ public class DoasController implements InitializingBean {
         resultMap.put("systemState",systemState);
         resultMap.put("redList",redList);
         resultMap.put("redListStr",listToString(redList,','));
-        return resultMap;
     }
 
     // 方法四
