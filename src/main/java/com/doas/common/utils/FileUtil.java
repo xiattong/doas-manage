@@ -1,14 +1,12 @@
 package com.doas.common.utils;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.io.File;
 import java.io.FilenameFilter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 /**
  * 文件读取工具类
@@ -37,7 +35,7 @@ public class FileUtil implements FilenameFilter {
         File file = new File(filePath);
         if (file != null) {
             if (file.isDirectory()) {
-               File[] files = getSortedFiles(file,acceptSuffix);
+               File[] files = getSortedDescFiles(file,acceptSuffix);
                if(files != null)
                    return files[0];
             } else {
@@ -53,7 +51,8 @@ public class FileUtil implements FilenameFilter {
         File file = new File(excelFilePath);
         if (file != null) {
             if (file.isDirectory()) {
-                File[] files = getSortedFiles(file,acceptSuffix);
+                // 倒序，最新的文件在最前面
+                File[] files = getSortedDescFiles(file,acceptSuffix);
                 for(File f : files){
                     fileNameList.add(f.getName());
                 }
@@ -66,9 +65,21 @@ public class FileUtil implements FilenameFilter {
         return fileNameList;
     }
 
-    private static File[] getSortedFiles(File directory,String... acceptSuffix){
+    /**
+     * 按照文件名倒序排列，最新的文件在最前面
+     * @param directory
+     * @param acceptSuffix
+     * @return
+     */
+    private static File[] getSortedDescFiles(File directory,String... acceptSuffix){
         File[] files = directory.listFiles(new FileUtil(acceptSuffix));
+        if (files.length == 1) {
+            return files;
+        }
         if (files.length > 0) {
+            if (files.length == 1) {
+                return files;
+            }
             Arrays.sort(files, new Comparator<File>() {
                 @Override
                 public int compare(File file1, File file2) {
@@ -99,6 +110,48 @@ public class FileUtil implements FilenameFilter {
             return files;
         }
         return null;
+    }
+
+    /**
+     * 正序排列
+     * @param fileNames
+     * @return
+     */
+    public static List<String> getSortedAscList(List<String> fileNames){
+        if (CollectionUtils.isEmpty(fileNames)) {
+            return new ArrayList<>();
+        }
+        if (fileNames.size() == 1) {
+            return fileNames;
+        }
+        Collections.sort(fileNames, new Comparator<String>() {
+            @Override
+            public int compare(String file1, String file2) {
+                try {
+                    String file2Name = null;
+                    String file1Name = null;
+                    if (file2.lastIndexOf(".") > 0) {
+                        file2Name = file2.substring(0, file2.lastIndexOf("."));
+                    } else {
+                        file2Name = file2;
+                    }
+                    if (file1.lastIndexOf(".") > 0) {
+                        file1Name = file1.substring(0, file1.lastIndexOf("."));
+                    } else {
+                        file1Name = file1;
+                    }
+                    if (StringUtils.isEmpty(file2Name) || StringUtils.isEmpty(file1Name)) {
+                        return 1;
+                    }
+                    return (int) (Long.parseLong(file1Name) - Long.parseLong(file2Name));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    log.error("Error ! FileUtil#getSortedFiles: {}", e.getMessage());
+                    return 1;
+                }
+            }
+        });
+        return fileNames;
     }
 
 

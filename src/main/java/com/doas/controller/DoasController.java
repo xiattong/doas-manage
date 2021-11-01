@@ -59,24 +59,24 @@ public class DoasController implements InitializingBean {
      * @return
      */
     @PostMapping("/initData")
-    public ResultObject initData(@RequestBody Map<String, String> param) {
+    public ResultObject initData(@RequestBody Map<String, Object> param) {
         log.info("param:"+ JSON.toJSONString(param));
 
         //请求的数据模型 chart 曲线; map-line 地图（柱线）; map-wall 地图（柱面）
-        String dataType = param.get("dataType");
-        String extractNum = param.get("extractNum");
+        String dataType = param.get("dataType").toString();
+        String extractNum = param.get("extractNum").toString();
         if (StringUtils.isEmpty(extractNum)) {
             extractNum = "0";
         }
         /** 时间段*/
-        String timeRange = param.get("timeRange");;
+        String timeRange = param.get("timeRange").toString();
         dataReadThread.setTimeRange(timeRange);
 
-        /** 当前读取的文件名称*/
-        String currentFileName = Objects.isNull(param.get("currentFileName")) ? "" : param.get("currentFileName");
-        dataReadThread.setCurrentFileName(currentFileName);
+        /** 当前选择的文件*/
+        List<String> selectedFiles = Objects.isNull(param.get("selectedFiles")) ? null : (List)param.get("selectedFiles");
+        dataReadThread.setSelectedFiles(selectedFiles);
 
-        String redList = param.get("redList");
+        String redList = Objects.isNull(param.get("redList")) ? null : param.get("redList").toString();
         if(StringUtils.isEmpty(redList)){
             redList = defaultRedList;
         }
