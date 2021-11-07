@@ -45,6 +45,8 @@ public class DataReadThread extends Thread {
     private int currentLineNo = 0;
     /** 时间段*/
     private String timeRange = "";
+    /** 当权读取的最新文件*/
+    private String currentNewFile = "";
 
 
     /**
@@ -62,6 +64,8 @@ public class DataReadThread extends Thread {
                 // 前端未选择文件，认为读取最新文件
                 parsingFiles.clear();
                 parsingFiles.add(this.fileNameList.get(0));
+                // 检查当最新文件发生变更时，刷新数据
+                checkAndRefreshNewFile(this.fileNameList.get(0));
             }else{
                 parsingFiles.clear();
                 parsingFiles.addAll(this.selectedFiles);
@@ -139,6 +143,20 @@ public class DataReadThread extends Thread {
                 e.printStackTrace();
                 log.error("Source file reader thread exception! :" + e.getMessage());
             }
+        }
+    }
+
+    /**
+     * 检查当最新文件发生变更时，刷新数据
+     * @param newFile
+     */
+    private void checkAndRefreshNewFile(String newFile) {
+        // 当最新文件发生变更时，也要重新刷新数据
+        if (StringUtils.isEmpty(currentNewFile)) {
+            currentNewFile = newFile;
+        } else if (!currentNewFile.equals(newFile)) {
+            refresh();
+            currentNewFile = newFile;
         }
     }
 
