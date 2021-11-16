@@ -93,7 +93,7 @@ public class DoasController implements InitializingBean {
             resultMap.put("companyName",companyName);
         }
         // 有数据时
-        if (dataList.size() > 1) {
+        if (!CollectionUtils.isEmpty(dataList)) {
             try {
                 if ("chart".equals(dataType)) {
                     dataParseChart(dataList, resultMap);
@@ -186,6 +186,20 @@ public class DoasController implements InitializingBean {
                 // 最小值
                 minData.add(MathUtil.roundHalfUp(statistics.getMin()) + "");
             }
+        }
+
+        // 判断，当data中只有一行标题的时候，给一个默认值
+        if (data.get(0).size() == 0) {
+            List<String> list = new ArrayList<>();
+            for (int i = 0 ; i < data.size() ; i++) {
+                list.add("0");
+                realTimeData.set(i, "0");
+                averageData.add("0");
+                maxData.add("0");
+                minData.add("0");
+            }
+            data.add(list);
+            xAxis.add("00:00:00");
         }
 
         resultMap.put("xAxis", xAxis.toArray());
