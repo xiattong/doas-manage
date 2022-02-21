@@ -46,7 +46,7 @@ public class ColorUtil {
     /**
      * 颜色转换（方案三）
      */
-    public static int[] convertP3(double value,int red) {
+    public static int[] convertP3(double value,double red) {
         if(value >= red){
             return new int[]{255,0,0};
         }
@@ -80,7 +80,7 @@ public class ColorUtil {
      * @param scale
      * @return
      */
-    public static double[] convertVertexColors(double value,int scale){
+    public static double[] convertVertexColors(double value,double scale){
         int[] rgbArray = convertP3(value,scale);
         double[] vertexColors = new double[rgbArray.length];
         for (int i = 0 ; i < rgbArray.length ; i++){

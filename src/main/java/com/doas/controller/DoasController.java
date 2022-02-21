@@ -239,7 +239,7 @@ public class DoasController implements InitializingBean {
             //解析指定的色等值
             if (!StringUtils.isEmpty(specifiedRedList) && specifiedRedList.split(",").length == cells.size()) {
                 List<String> redListStr = Arrays.asList(specifiedRedList.split(","));
-                redList = redListStr.stream().map(item -> Integer.parseInt(item)).collect(Collectors.toList());
+                redList = redListStr.stream().map(item -> (int)Double.parseDouble(item)).collect(Collectors.toList());
                 break;
             }
             //色等值未指定，需要计算
@@ -250,7 +250,7 @@ public class DoasController implements InitializingBean {
                 }
             } else {
                 for (int i = 0; i < cells.size(); i++) {
-                    int cellValue = Integer.parseInt(cells.get(i));
+                    int cellValue = (int)Double.parseDouble(cells.get(i));
                     //修改 redList,使 redList 中的值保持最大
                     if (redList.get(i) < cellValue) {
                         redList.set(i, cellValue);
@@ -263,7 +263,7 @@ public class DoasController implements InitializingBean {
         if(StringUtils.isEmpty(redScale)){
             redScale = "1";
         }
-        redList = redList.stream().map(item -> (int)(item * Double.parseDouble(redScale))).collect(Collectors.toList());
+        redList = redList.stream().map(item -> item * (int)Double.parseDouble(redScale)).collect(Collectors.toList());
         for (int k = 0 ; k < dataList.size() ; k ++) {
             List<String> row = dataList.get(k);
             //保存数值的数据
@@ -285,9 +285,9 @@ public class DoasController implements InitializingBean {
                     continue;
                 }
                 //舍弃数值为0的数据
-                int sumCellValue = 0;
+                double sumCellValue = 0;
                 for (int i = 0; i < cells.size(); i++) {
-                    sumCellValue = sumCellValue + Integer.parseInt(cells.get(i));
+                    sumCellValue = sumCellValue + Double.parseDouble(cells.get(i));
                 }
                 if(sumCellValue <= 0){
                     continue;
@@ -297,7 +297,7 @@ public class DoasController implements InitializingBean {
                 //存储数值
                 for (int i = 0; i < cells.size(); i++) {
                     data.get(i).add(cells.get(i));
-                    int cellValue = Integer.parseInt(cells.get(i));
+                    double cellValue = Double.parseDouble(cells.get(i));
                     //计算颜色，并保存
                     colors.get(i).add(ColorUtil.convertVertexColors(
                             Double.parseDouble(cells.get(i)), redList.get(i)));
