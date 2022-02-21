@@ -146,9 +146,9 @@ public class DoasController implements InitializingBean {
                 }
             } else {
                 //舍弃数值为0的数据
-                int sumCellValue = 0;
+                double sumCellValue = 0;
                 for (int i = 0; i < cells.size(); i++) {
-                    sumCellValue = sumCellValue + Integer.parseInt(cells.get(i));
+                    sumCellValue = sumCellValue + Double.parseDouble(cells.get(i));
                 }
                 if(sumCellValue <= 0){
                     continue;
