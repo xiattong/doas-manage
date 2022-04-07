@@ -99,7 +99,14 @@ public class FileUtil implements FilenameFilter {
                         if (StringUtils.isEmpty(file2Name) || StringUtils.isEmpty(file1Name)) {
                             return 1;
                         }
-                        return (int) (Long.parseLong(file2Name) - Long.parseLong(file1Name));
+                        long cp = (Long.parseLong(file2Name) - Long.parseLong(file1Name));
+                        if (cp > 0) {
+                            return 1;
+                        } else if (cp == 0) {
+                            return 0;
+                        } else {
+                            return -1;
+                        }
                     } catch (Exception e) {
                         e.printStackTrace();
                         log.error("Error ! FileUtil#getSortedFiles: {}", e.getMessage());
