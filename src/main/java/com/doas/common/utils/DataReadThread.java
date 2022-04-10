@@ -90,7 +90,7 @@ public class DataReadThread extends Thread {
                                 byte b = mappedByteBuffer.get();
                                 ds[offset] = b;
                             }
-                            Scanner scan = new Scanner(new ByteArrayInputStream(ds), this.charsetName).useDelimiter(" ");
+                            Scanner scan = new Scanner(new ByteArrayInputStream(ds), this.charsetName).useDelimiter("  ");
                             int slideIndex = this.currentLineNo; //15
                             while (scan.hasNext()) {
                                 List<List<String>> tempDataList = new ArrayList<>();
@@ -106,11 +106,11 @@ public class DataReadThread extends Thread {
                                     // 19 - (20 - 10) = 9
                                     String line = lines[slideIndex - lineNum + lines.length];
                                     if (this.cellsNum == 0) {
-                                        tempDataList.add(Arrays.asList(line.split("~")));
+                                        tempDataList.add(Arrays.asList(line.split("~| ")));
                                         this.cellsNum = tempDataList.get(0).size();
-                                    } else if (line.split("~").length == this.cellsNum) {
+                                    } else if (line.split("~| ").length == this.cellsNum) {
                                         // 加入时间段判断
-                                        String[] lineArray = line.split("~");
+                                        String[] lineArray = line.split("~| ");
                                         if ("time".equals(lineArray[0].toLowerCase()) || "时间".equals(lineArray[0])) {
                                             continue;
                                         }
