@@ -45,10 +45,15 @@ public class DoasController implements InitializingBean {
     @Resource
     private DataReadThread dataReadThread;
 
+    @Resource
+    private DataWriteThread dataWriteThread;
+
     @Override
     public void afterPropertiesSet() throws Exception {
         //启动文件读取线程
         dataReadThread.start();
+        Thread.sleep(3000);
+        dataWriteThread.run();
     }
 
     /**
