@@ -1,10 +1,13 @@
 package com.doas.controller;
 
 import com.alibaba.fastjson.JSON;
+import com.doas.common.config.DoasConfig;
+import com.doas.common.config.SerialParamConfig;
+import com.doas.common.thread.DataReadThread;
 import com.doas.common.utils.*;
+import com.doas.listener.SerialCommListener;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,36 +27,26 @@ import java.util.stream.Collectors;
 @RestController()
 public class DoasController implements InitializingBean {
 
-    @Value("${exe.setup}")
-    private String setup;
-
-    @Value("${exe.nginx}")
-    private String nginx;
-
-    @Value("${company-name}")
-    private String companyName;
-
-    @Value("${map-type}")
-    private String mapType;
-
-    @Value("${red-list}")
-    private String defaultRedList;
-
-    @Value("${red-scale}")
-    private String redScale;
+    @Resource
+    private DoasConfig doasConfig;
 
     @Resource
     private DataReadThread dataReadThread;
 
-    @Resource
-    private DataWriteThread dataWriteThread;
-
     @Override
     public void afterPropertiesSet() throws Exception {
-        //启动文件读取线程
-        dataReadThread.start();
+        // 起动因子数据采集串口监听
+        SerialParamConfig dataParam = new SerialParamConfig("COM1","COMM-DATA", 9600, 0, 8, 1, doasConfig.getDataFilePath(), doasConfig.getFileRefreshTime());
+        SerialCommListener dataCommListener = new SerialCommListener();
+        dataCommListener.init(dataParam);
+
+        // 坐标数据采集串口监听
+        SerialParamConfig geoParam = new SerialParamConfig("COM2","COMM-DATA", 9600, 0, 8, 1, doasConfig.getDataFilePath(), doasConfig.getFileRefreshTime());
+        SerialCommListener geoCommListener = new SerialCommListener();
+        geoCommListener.init(geoParam);
+
         Thread.sleep(3000);
-        dataWriteThread.run();
+        // dataReadThread.start();
     }
 
     /**
@@ -83,19 +76,19 @@ public class DoasController implements InitializingBean {
 
         String redList = Objects.isNull(param.get("redList")) ? null : param.get("redList").toString();
         if(StringUtils.isEmpty(redList)){
-            redList = defaultRedList;
+            redList = doasConfig.getDefaultRedList();
         }
         List<List<String>> dataList = dataReadThread.getDataList();
 
         ResultObject result = ResultObject.basic();
         Map<String, Object> resultMap = new HashMap<>();
-        resultMap.put("mapType",mapType);
+        resultMap.put("mapType", doasConfig.getMapType());
         resultMap.put("fileNameList",dataReadThread.getFileNameList());
         try {
-            resultMap.put("companyName",new String(companyName.getBytes("iso-8859-1"), "UTF-8"));
+            resultMap.put("companyName",new String(doasConfig.getCompanyName().getBytes("iso-8859-1"), "UTF-8"));
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
-            resultMap.put("companyName",companyName);
+            resultMap.put("companyName",doasConfig.getCompanyName());
         }
         // 有数据时
         if (!CollectionUtils.isEmpty(dataList)) {
@@ -265,10 +258,10 @@ public class DoasController implements InitializingBean {
         }
 
         //遍历解析数据
-        if(StringUtils.isEmpty(redScale)){
-            redScale = "1";
+        if(StringUtils.isEmpty(doasConfig.getRedScale())){
+            doasConfig.setRedScale("1");
         }
-        redList = redList.stream().map(item -> item * (int)Double.parseDouble(redScale)).collect(Collectors.toList());
+        redList = redList.stream().map(item -> item * (int)Double.parseDouble(doasConfig.getRedScale())).collect(Collectors.toList());
         for (int k = 0 ; k < dataList.size() ; k ++) {
             List<String> row = dataList.get(k);
             //保存数值的数据

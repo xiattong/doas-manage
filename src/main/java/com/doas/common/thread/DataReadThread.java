@@ -1,11 +1,14 @@
-package com.doas.common.utils;
+package com.doas.common.thread;
 
+import com.doas.common.config.DoasConfig;
+import com.doas.common.utils.DateUtil;
+import com.doas.common.utils.FileUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
+import javax.annotation.Resource;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.RandomAccessFile;
@@ -23,14 +26,10 @@ import java.util.*;
 @Component
 public class DataReadThread extends Thread {
 
-    /** 数据文件存放位置*/
-    @Value("${data.filePath}")
-    private String excelFilePath;
-    /** 数据刷新频率*/
-    @Value("${data.refresh.hz}")
-    private int refreshHz;
-    @Value("${data.charsetName}")
-    private String charsetName;
+    @Resource
+    private DoasConfig doasConfig;
+
+
     /** 文件解析后得到的数据*/
     private List<List<String>> dataList = new ArrayList<>();
     /** 文件列表*/
@@ -57,9 +56,9 @@ public class DataReadThread extends Thread {
     public void run() {
         while(true) {
             // 更新文件名称列表
-            this.fileNameList = FileUtil.getSortedFileNameList(this.excelFilePath,".txt");
+            this.fileNameList = FileUtil.getSortedFileNameList(doasConfig.getDataFilePath(),".txt");
             // 文件名集合
-            String filePath = this.excelFilePath;
+            String filePath = doasConfig.getDataFilePath();
             if(CollectionUtils.isEmpty(this.selectedFiles)){
                 // 前端未选择文件，认为读取最新文件
                 parsingFiles.clear();
@@ -89,8 +88,9 @@ public class DataReadThread extends Thread {
                             for (int offset = 0; offset < len; offset++) {
                                 byte b = mappedByteBuffer.get();
                                 ds[offset] = b;
+
                             }
-                            Scanner scan = new Scanner(new ByteArrayInputStream(ds), this.charsetName).useDelimiter("  ");
+                            Scanner scan = new Scanner(new ByteArrayInputStream(ds), doasConfig.getCharsetName()).useDelimiter("  ");
                             int slideIndex = this.currentLineNo; //15
                             while (scan.hasNext()) {
                                 List<List<String>> tempDataList = new ArrayList<>();
@@ -137,7 +137,7 @@ public class DataReadThread extends Thread {
                 }
             }
             try {
-                Thread.sleep(this.refreshHz*1000);
+                Thread.sleep(doasConfig.getRefreshHz() * 1000);
                 System.gc();
             } catch (InterruptedException e) {
                 e.printStackTrace();

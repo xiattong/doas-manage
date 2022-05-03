@@ -1,24 +1,19 @@
 package com.doas.common.utils;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 
-import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Objects;
 
 /**
  * 日期处理工具类
  * @author xiattong
  */
 public class DateUtil {
-    /**
-     * 时间格式(yyyy-MM-dd)
-     */
-    public final static String DATE_PATTERN = "yyyy-MM-dd HH:mm:ss";
+
+    private static final String FORMAT = "yyyyMMddHHmmss";
+
     /**
      * 时间格式(yyyy-MM-dd HH:mm:ss)
      */
@@ -28,12 +23,40 @@ public class DateUtil {
         return format(date, TIME_PATTERN);
     }
 
+    /**
+     * 自定义格式化日期
+     * @param date
+     * @param pattern
+     * @return
+     */
     public static String format(Date date, String pattern) {
         if (date != null) {
             SimpleDateFormat df = new SimpleDateFormat(pattern);
             return df.format(date);
         }
         return null;
+    }
+
+    /**
+     * 默认式化日期（yyyy-MM-dd HH:mm:ss）
+     * @param date
+     * @return
+     */
+    public static String defaultFormat(Date date) {
+        return format(date, FORMAT);
+    }
+
+
+    /**
+     * 字符串转datetime
+     * @param str
+     * @return
+     * @throws ParseException
+     */
+    public static Date parseDateTime(String str) throws ParseException {
+        SimpleDateFormat dateFormat = new SimpleDateFormat(FORMAT);
+        Date parse = dateFormat.parse(str);
+        return parse;
     }
 
     /**
@@ -69,4 +92,27 @@ public class DateUtil {
         }
         return isBetweenTime(dateTime, timeRangeArray[0].trim(), timeRangeArray[1].trim());
     }
+
+    /**
+     * 获取时间间隔，秒
+     * @param startDate
+     * @param endDate
+     * @return
+     */
+    public static long diffSeconds(String startDate, String endDate) throws ParseException{
+        long different = parseDateTime(endDate).getTime() - parseDateTime(startDate).getTime();
+        return different / 1000;
+    }
+
+    /**
+     * 获取时间间隔，分
+     * @param startDate
+     * @param endDate
+     * @return
+     */
+    public static long diffMinutes(String startDate, String endDate) throws ParseException{
+        return diffSeconds(startDate, endDate) / 60;
+    }
+
+
 }
