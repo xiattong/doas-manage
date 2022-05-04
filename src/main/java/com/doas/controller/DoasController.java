@@ -37,7 +37,8 @@ public class DoasController implements InitializingBean {
     @Override
     public void afterPropertiesSet() throws Exception {
         // 起动因子数据采集串口监听
-        SerialParamConfig dataParam = new SerialParamConfig("COM1", Constant.SERIAL_NAME_DATA, 115200, 0, 8, 1, doasConfig.getDataFilePath(), doasConfig.getFileRefreshTime());
+        SerialParamConfig dataParam = new SerialParamConfig(doasConfig.getSerialNumber(), Constant.SERIAL_NAME_DATA, doasConfig.getBaudRate(),
+                doasConfig.getCheckoutBit(), doasConfig.getDataBit(), doasConfig.getStopBit(), doasConfig.getDataFilePath(), doasConfig.getFileRefreshTime());
         SerialCommListener dataCommListener = new SerialCommListener();
         dataCommListener.init(dataParam);
         Thread.sleep(3000);

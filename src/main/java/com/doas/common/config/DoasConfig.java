@@ -47,4 +47,24 @@ public class DoasConfig {
     /** 写入新文件间隔时间，单位分钟*/
     @Value("${file-refresh-time}")
     private Integer fileRefreshTime = 120;
+
+    /** 因子数据采集 - 串口号*/
+    @Value("${data.serial-number}")
+    private String serialNumber;
+
+    /** 因子数据采集 - 波特率*/
+    @Value("${data.baud-rate}")
+    private Integer baudRate;
+
+    /** 因子数据采集 - 校验位*/
+    @Value("${data.checkout-bit}")
+    private Integer checkoutBit;
+
+    /** 因子数据采集 - 数据位*/
+    @Value("${data.data-bit}")
+    private Integer dataBit;
+
+    /** 因子数据采集 - 停止位*/
+    @Value("${data.stop-bit}")
+    private Integer stopBit;
 }
