@@ -57,6 +57,14 @@ public class DataReadThread extends Thread {
         while(true) {
             // 更新文件名称列表
             this.fileNameList = FileUtil.getSortedFileNameList(doasConfig.getDataFilePath(),".txt");
+            if (CollectionUtils.isEmpty(this.fileNameList)) {
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                continue;
+            }
             // 文件名集合
             String filePath = doasConfig.getDataFilePath();
             if(CollectionUtils.isEmpty(this.selectedFiles)){

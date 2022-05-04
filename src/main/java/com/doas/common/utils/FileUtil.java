@@ -46,16 +46,16 @@ public class FileUtil implements FilenameFilter {
      * @param acceptSuffix
      * @return
      */
-    public static List<String>
-
-
-    getSortedFileNameList(String excelFilePath, String... acceptSuffix){
+    public static List<String> getSortedFileNameList(String excelFilePath, String... acceptSuffix){
         List<String> fileNameList = new ArrayList<>();
         File file = new File(excelFilePath);
         if (file != null) {
             if (file.isDirectory()) {
                 // 倒序，最新的文件在最前面
                 File[] files = getSortedDescFiles(file,acceptSuffix);
+                if (files == null || files.length == 0) {
+                    return null;
+                }
                 for(File f : files){
                     fileNameList.add(f.getName());
                 }

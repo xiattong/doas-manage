@@ -42,7 +42,8 @@ public class DoasController implements InitializingBean {
         SerialCommListener dataCommListener = new SerialCommListener();
         dataCommListener.init(dataParam);
         Thread.sleep(3000);
-        // dataReadThread.start();
+        // 启动数据读取线程
+        dataReadThread.start();
     }
 
     /**
