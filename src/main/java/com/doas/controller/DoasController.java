@@ -1,6 +1,7 @@
 package com.doas.controller;
 
 import com.alibaba.fastjson.JSON;
+import com.doas.common.config.Constant;
 import com.doas.common.config.DoasConfig;
 import com.doas.common.config.SerialParamConfig;
 import com.doas.common.thread.DataReadThread;
@@ -36,15 +37,9 @@ public class DoasController implements InitializingBean {
     @Override
     public void afterPropertiesSet() throws Exception {
         // 起动因子数据采集串口监听
-        SerialParamConfig dataParam = new SerialParamConfig("COM1","COMM-DATA", 9600, 0, 8, 1, doasConfig.getDataFilePath(), doasConfig.getFileRefreshTime());
+        SerialParamConfig dataParam = new SerialParamConfig("COM1", Constant.SERIAL_NAME_DATA, 115200, 0, 8, 1, doasConfig.getDataFilePath(), doasConfig.getFileRefreshTime());
         SerialCommListener dataCommListener = new SerialCommListener();
         dataCommListener.init(dataParam);
-
-        // 坐标数据采集串口监听
-        SerialParamConfig geoParam = new SerialParamConfig("COM2","COMM-DATA", 9600, 0, 8, 1, doasConfig.getDataFilePath(), doasConfig.getFileRefreshTime());
-        SerialCommListener geoCommListener = new SerialCommListener();
-        geoCommListener.init(geoParam);
-
         Thread.sleep(3000);
         // dataReadThread.start();
     }

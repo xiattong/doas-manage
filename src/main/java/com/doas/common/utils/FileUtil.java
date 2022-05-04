@@ -4,10 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.FilenameFilter;
+import java.io.*;
 import java.util.*;
 
 /**
@@ -168,13 +165,12 @@ public class FileUtil implements FilenameFilter {
 
 
     /**
-     *
-     * @param serialCommName  "COMM-DATA" - 因子采集数据   "COMM-GEO" - 坐标采集数据
+     * 这个方法需要考虑线程安全
      * @param pathName
      * @param lineData
      * @param fileRefreshTime 文件更新时间
      */
-    public static void writeData(String serialCommName, String pathName, String lineData, Integer fileRefreshTime) {
+    public static void writeData(String pathName, String lineData, Integer fileRefreshTime) {
 
         if (Objects.isNull(pathName) || Objects.isNull(lineData)) {
             return;
@@ -182,25 +178,94 @@ public class FileUtil implements FilenameFilter {
         try {
             String writeFileName = "";
             // 查询已存在的文件
-            List<String> fileNameList = FileUtil.getSortedFileNameList(pathName,".txt");
-            if (CollectionUtils.isEmpty(fileNameList) || DateUtil.diffSeconds(fileNameList.get(0).substring(0, 14), DateUtil.defaultFormat(new Date())) > fileRefreshTime) {
+            List<String> fileNameList = FileUtil.getSortedFileNameList(pathName, ".txt");
+            if (CollectionUtils.isEmpty(fileNameList) || DateUtil.diffMinutes(fileNameList.get(0).substring(0, 14), DateUtil.defaultFormat(new Date())) > fileRefreshTime) {
                 writeFileName = DateUtil.defaultFormat(new Date()) + ".txt";
             } else {
                 writeFileName = fileNameList.get(0);
             }
+
             // 获取写入文件
             File file = new File(pathName + "/" + writeFileName);
             if (!file.exists()) {
                 file.createNewFile();
             }
-            // 写入数据预处理
-            FileWriter fw = new FileWriter(file.getAbsoluteFile());
+            // 读取文件最后一行
+            int lineNum = readLastLine(file);
+            // 解析文件内容
+            String parsedLineData = parseLineData(lineNum, lineData);
+            if (StringUtils.isEmpty(parsedLineData)) {
+                return;
+            }
+            // 把内容追加到文件最后
+            FileWriter fw = new FileWriter(file.getAbsoluteFile(), true);
             BufferedWriter bw = new BufferedWriter(fw);
-            bw.write(lineData);
+            bw.write(parsedLineData);
+            bw.newLine();
             bw.close();
         } catch (Exception e) {
             log.error("Write lineData error!:{}", e.getStackTrace());
         }
+    }
+
+    /**
+     * 解析文件内容
+     * @param lineNum
+     * @param lineData
+     * @return
+     */
+    private static String parseLineData(int lineNum, String lineData) {
+        try {
+            String[] lineDateArray = lineData.split(";");
+            int size = lineDateArray.length;
+            // 预热中的数据不要
+            if ("0".equals(lineDateArray[size - 1])) {
+                return null;
+            }
+            StringBuilder parsedLineData = new StringBuilder();
+            if (lineNum == 0) {
+                // 解析成文件头 (例如：时间~SO2~NO~NO2~NH3~O3~HCHO~苯~甲苯~二甲苯~乙苯~GPS.x~GPS.y~单位~系统状态~GPS状态)
+                parsedLineData.append("时间~");
+                for (int index = 2; index < size - 4; index++) {
+                    parsedLineData.append(lineDateArray[index].substring(0, lineDateArray[index].indexOf("(")) + "~");
+                }
+                parsedLineData.append("GPS.x~GPS.y~单位~系统状态~GPS状态");
+            } else {
+                // 解析成数据 (例如：15:33:51~10~4~64~19~32~1~234~58~34~642~114.363922~36.381824~ug/m3~1~1)
+                parsedLineData.append(DateUtil.formatTime(new Date()) + "~");
+                for (int index = 2; index < size - 4; index++) {
+                    parsedLineData.append(lineDateArray[index].substring(lineDateArray[index].indexOf("@") + 1) + "~");
+                }
+                parsedLineData.append(lineDateArray[size - 4] + "~");
+                parsedLineData.append(lineDateArray[size - 3] + "~");
+                // 单位
+                if (size >= 7 ) {
+                    String temp = lineDateArray[2];
+                    parsedLineData.append(temp.substring(temp.indexOf("(") + 1, temp.indexOf(")")) + "~");
+                }
+                parsedLineData.append("1~1");
+            }
+            return parsedLineData.toString();
+        } catch (Exception e) {
+            log.error("Write lineData error!:{}", e.getStackTrace());
+        }
+        return null;
+    }
+
+    /**
+     * 读取文件的行数
+     * @param file
+     * @return
+     */
+    public static int readLastLine(File file) {
+        try (LineNumberReader lineNumberReader = new LineNumberReader(new FileReader(file))){
+            lineNumberReader.skip(Long.MAX_VALUE);
+            int lineNumber = lineNumberReader.getLineNumber();
+            return lineNumber;//实际上是读取换行符数量 , 所以需要+1
+        } catch (IOException e) {
+            return -1;
+        }
+
     }
 }
 

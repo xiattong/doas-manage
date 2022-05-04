@@ -131,7 +131,7 @@ public class SerialCommListener implements SerialPortEventListener {
                 // 直接获取到的数据
                 String data = new String(readBuffer, 0, len).trim();
                 // 写入数据
-                FileUtil.writeData(commPortId.getCurrentOwner(), this.paramConfig.getDataFilePath(), data, this.paramConfig.getFileRefreshTime());
+                FileUtil.writeData(this.paramConfig.getDataFilePath(), data, this.paramConfig.getFileRefreshTime());
                 inputStream.close();
                 break;
             }
