@@ -47,7 +47,7 @@ public class DoasController implements InitializingBean {
         dataCommListener.init(dataParam);
         Thread.sleep(3000);
         // 启动数据读取线程
-        // dataReadThread.start();
+        dataReadThread.start();
     }
 
     /**
@@ -129,7 +129,7 @@ public class DoasController implements InitializingBean {
         List<String> maxData = new ArrayList<>();
         //最小值
         List<String> minData = new ArrayList<>();
-        //仪器状态+GPS状态+光源光强+光源已使用时间
+        //系统状态+GPS状态+光源光强+光源已使用时间
         List<String> systemState = new ArrayList<>();
         //遍历解析数据
         for(int k = 0 ; k < dataList.size() ; k ++){
@@ -164,7 +164,7 @@ public class DoasController implements InitializingBean {
                     }
                 }
                 if (lastRow) {
-                    // 仪器状态+GPS状态+光源光强+光源已使用时间
+                    // 系统状态+GPS状态+光源光强+光源已使用时间
                     systemState = v.subList(v.size() - 4, v.size());
                 }
             }
