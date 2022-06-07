@@ -37,13 +37,17 @@ public class DoasController implements InitializingBean {
     @Override
     public void afterPropertiesSet() throws Exception {
         // 起动因子数据采集串口监听
-        SerialParamConfig dataParam = new SerialParamConfig(doasConfig.getSerialNumber(), Constant.SERIAL_NAME_DATA, doasConfig.getBaudRate(),
-                doasConfig.getCheckoutBit(), doasConfig.getDataBit(), doasConfig.getStopBit(), doasConfig.getDataFilePath(), doasConfig.getFileRefreshTime());
+        SerialParamConfig dataParam = SerialParamConfig.builder()
+                .serialNumber(doasConfig.getSerialNumber()).serialName(Constant.SERIAL_NAME_DATA)
+                .baudRate(doasConfig.getBaudRate()).checkoutBit(doasConfig.getCheckoutBit())
+                .dataBit(doasConfig.getDataBit()).stopBit(doasConfig.getStopBit())
+                .dataFilePath(doasConfig.getDataFilePath()).fileRefreshTime(doasConfig.getFileRefreshTime())
+                .build();
         SerialCommListener dataCommListener = new SerialCommListener();
         dataCommListener.init(dataParam);
         Thread.sleep(3000);
         // 启动数据读取线程
-        dataReadThread.start();
+        // dataReadThread.start();
     }
 
     /**
@@ -125,13 +129,13 @@ public class DoasController implements InitializingBean {
         List<String> maxData = new ArrayList<>();
         //最小值
         List<String> minData = new ArrayList<>();
-        //系统状态
-        String[] systemState = new String[2];
+        //仪器状态+GPS状态+光源光强+光源已使用时间
+        List<String> systemState = new ArrayList<>();
         //遍历解析数据
         for(int k = 0 ; k < dataList.size() ; k ++){
             List<String> v = dataList.get(k);
             //存储因子
-            List<String> cells = v.subList(1, v.size() - 5);
+            List<String> cells = v.subList(1, v.size() - 7);
             if(k == 0) {
                 resultMap.put("factors", cells.toArray());
                 resultMap.put("factorColors", ColorUtil.getVariantColors(cells.toArray().length));
@@ -160,9 +164,8 @@ public class DoasController implements InitializingBean {
                     }
                 }
                 if (lastRow) {
-                    // 存储系统状态
-                    systemState[0] =  v.get(v.size() - 2);
-                    systemState[1] =  v.get(v.size() - 1);
+                    // 仪器状态+GPS状态+光源光强+光源已使用时间
+                    systemState = v.subList(v.size() - 4, v.size());
                 }
             }
         }
@@ -223,14 +226,14 @@ public class DoasController implements InitializingBean {
         //坐标-地图数据
         List<double[]> coordinates = new ArrayList<>();
         //系统状态
-        String[] systemState = new String[2];
+        List<String> systemState = new ArrayList<>();
         //保存各因子 red 值的列表
         List<Integer> redList = new ArrayList<>();
         //计算redList
         for (int k = 0 ; k < dataList.size() ; k ++) {
             List<String> row = dataList.get(k);
             //保存数值的数据
-            List<String> cells = row.subList(1, row.size() - 5);
+            List<String> cells = row.subList(1, row.size() - 7);
             //解析指定的色等值
             if (!StringUtils.isEmpty(specifiedRedList) && specifiedRedList.split(",").length == cells.size()) {
                 List<String> redListStr = Arrays.asList(specifiedRedList.split(","));
@@ -262,7 +265,7 @@ public class DoasController implements InitializingBean {
         for (int k = 0 ; k < dataList.size() ; k ++) {
             List<String> row = dataList.get(k);
             //保存数值的数据
-            List<String> cells = row.subList(1, row.size() - 5);
+            List<String> cells = row.subList(1, row.size() - 7);
             if (k == 0) {
                 //存储因子
                 resultMap.put("factors", cells.toArray());
@@ -274,7 +277,7 @@ public class DoasController implements InitializingBean {
                 }
             } else {
                 //舍弃地图坐标为0的数据
-                List<String> coordinate = row.subList(row.size() - 5, row.size() - 3);
+                List<String> coordinate = row.subList(row.size() - 7, row.size() - 5);
                 if (Double.valueOf(coordinate.get(0)) == 0
                         || Double.valueOf(coordinate.get(1)) == 0) {
                     continue;
@@ -303,8 +306,7 @@ public class DoasController implements InitializingBean {
                 // 最后一行数据
                 if (k == dataList.size() - 1) {
                     // 存储系统状态
-                    systemState[0] = row.get(row.size() - 2);
-                    systemState[1] = row.get(row.size() - 1);
+                    systemState = row.subList(row.size() - 4, row.size());
                 }
             }
         }

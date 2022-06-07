@@ -219,31 +219,38 @@ public class FileUtil implements FilenameFilter {
             String[] lineDateArray = lineData.split(";");
             int size = lineDateArray.length;
             // 预热中的数据不要
-            if ("0".equals(lineDateArray[size - 1])) {
+            if (size < 10 || "0".equals(lineDateArray[size - 5])) {
                 return null;
             }
             StringBuilder parsedLineData = new StringBuilder();
             if (lineNum == 0) {
-                // 解析成文件头 (例如：时间~SO2~NO~NO2~NH3~O3~HCHO~苯~甲苯~二甲苯~乙苯~GPS.x~GPS.y~单位~系统状态~GPS状态)
+                // 解析成文件头 (例如：时间~SO2~NO~NO2~NH3~O3~HCHO~苯~甲苯~二甲苯~乙苯~GPS.x~GPS.y~单位~仪器状态~GPS状态)
                 parsedLineData.append("时间~");
-                for (int index = 2; index < size - 4; index++) {
+                for (int index = 2; index < size - 7; index++) {
                     parsedLineData.append(lineDateArray[index].substring(0, lineDateArray[index].indexOf("(")) + "~");
                 }
-                parsedLineData.append("GPS.x~GPS.y~单位~系统状态~GPS状态");
+                parsedLineData.append("GPS.x~GPS.y~单位~仪器状态~GPS状态~光源光强~光源已使用时间");
             } else {
                 // 解析成数据 (例如：15:33:51~10~4~64~19~32~1~234~58~34~642~114.363922~36.381824~ug/m3~1~1)
                 parsedLineData.append(DateUtil.formatTime(new Date()) + "~");
-                for (int index = 2; index < size - 4; index++) {
+                for (int index = 2; index < size - 7; index++) {
                     parsedLineData.append(lineDateArray[index].substring(lineDateArray[index].indexOf("@") + 1) + "~");
                 }
-                parsedLineData.append(lineDateArray[size - 4] + "~");
-                parsedLineData.append(lineDateArray[size - 3] + "~");
+                // GPS.x
+                parsedLineData.append(lineDateArray[size - 7] + "~");
+                // GPS.y
+                parsedLineData.append(lineDateArray[size - 6] + "~");
                 // 单位
-                if (size >= 7 ) {
-                    String temp = lineDateArray[2];
-                    parsedLineData.append(temp.substring(temp.indexOf("(") + 1, temp.indexOf(")")) + "~");
-                }
-                parsedLineData.append("1~1");
+                String temp = lineDateArray[2];
+                parsedLineData.append(temp.substring(temp.indexOf("(") + 1, temp.indexOf(")")) + "~");
+                // 仪器状态
+                parsedLineData.append(lineDateArray[size - 5] + "~");
+                // GPS状态
+                parsedLineData.append(lineDateArray[size - 4] + "~");
+                // 光源光强
+                parsedLineData.append(lineDateArray[size - 3] + "~");
+                // 光源已使用时间
+                parsedLineData.append(lineDateArray[size - 2]);
             }
             return parsedLineData.toString();
         } catch (Exception e) {

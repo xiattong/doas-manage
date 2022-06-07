@@ -5,6 +5,8 @@ import java.io.InputStream;
 import java.util.Enumeration;
 import java.util.Objects;
 import java.util.TooManyListenersException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.doas.common.config.SerialParamConfig;
 import com.doas.common.utils.FileUtil;
@@ -33,6 +35,10 @@ public class SerialCommListener implements SerialPortEventListener {
     private SerialPort serialPort;
     // 原始参数
     private SerialParamConfig paramConfig;
+    // 数据筛选正则
+    private final Pattern DATA_PATTERN = Pattern.compile("^ST(.*)ED$");
+    // 数据
+    private StringBuilder sb = new StringBuilder();
 
     /**
      * 初始化串口
@@ -130,12 +136,18 @@ public class SerialCommListener implements SerialPortEventListener {
             while ((len = inputStream.read(readBuffer)) != -1) {
                 // 直接获取到的数据
                 String data = new String(readBuffer, 0, len).trim();
-                // 写入数据
-                FileUtil.writeData(this.paramConfig.getDataFilePath(), data, this.paramConfig.getFileRefreshTime());
-                inputStream.close();
+                sb.append(data);
+                Matcher m = DATA_PATTERN.matcher(sb.toString());
+                if (m.find()) {
+                    sb = new StringBuilder();
+                    // 写入数据
+                    FileUtil.writeData(this.paramConfig.getDataFilePath(), m.group(0), this.paramConfig.getFileRefreshTime());
+                    inputStream.close();
+                }
                 break;
             }
         } catch (IOException e) {
+            sb = new StringBuilder();
             if (Objects.nonNull(inputStream)) {
                 try {
                     inputStream.close();

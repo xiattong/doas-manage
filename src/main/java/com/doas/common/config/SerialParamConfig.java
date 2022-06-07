@@ -1,8 +1,8 @@
 package com.doas.common.config;
 
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.stereotype.Component;
 
 /**
  * @author ：xiattong
@@ -11,9 +11,9 @@ import org.springframework.stereotype.Component;
  * @date ：Created in 2022/4/23 12:15
  * @modified By：
  */
-@Component
 @Getter
 @Setter
+@Builder
 public class SerialParamConfig {
 
     /** 数据文件存放位置*/
@@ -28,23 +28,4 @@ public class SerialParamConfig {
     private int checkoutBit;     // 校验位
     private int dataBit;         // 数据位
     private int stopBit;         // 停止位
-    public SerialParamConfig() {}
-    /**
-     * 构造方法
-     * @param serialNumber    串口号
-     * @param baudRate        波特率
-     * @param checkoutBit    校验位
-     * @param dataBit        数据位
-     * @param stopBit        停止位
-     */
-    public SerialParamConfig(String serialNumber, String serialName, int baudRate, int checkoutBit, int dataBit, int stopBit, String dataFilePath, Integer fileRefreshTime) {
-        this.serialNumber = serialNumber;
-        this.serialName = serialName;
-        this.baudRate = baudRate;
-        this.checkoutBit = checkoutBit;
-        this.dataBit = dataBit;
-        this.stopBit = stopBit;
-        this.dataFilePath = dataFilePath;
-        this.fileRefreshTime = fileRefreshTime;
-    }
 }
