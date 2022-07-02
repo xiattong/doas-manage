@@ -50,7 +50,7 @@ public class DoasConfig {
 
     /** 因子数据采集 - 串口号*/
     @Value("${data.serial-number}")
-    private String serialNumber;
+    private volatile String serialNumber;
 
     /** 因子数据采集 - 波特率*/
     @Value("${data.baud-rate}")

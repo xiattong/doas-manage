@@ -1,13 +1,12 @@
 package com.doas.common.utils;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.LinkedHashMap;
 
 /**
  * 返回结果封装
  * @author xiattong
  */
-public class ResultObject extends HashMap<String, Object> {
+public class ResultObject extends LinkedHashMap<String, Object> {
 	private static final long serialVersionUID = 1L;
 
 	public static ResultObject basic() {

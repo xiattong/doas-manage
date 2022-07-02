@@ -1,12 +1,10 @@
 package com.doas.controller;
 
 import com.alibaba.fastjson.JSON;
-import com.doas.common.config.Constant;
 import com.doas.common.config.DoasConfig;
-import com.doas.common.config.SerialParamConfig;
 import com.doas.common.thread.DataReadThread;
+import com.doas.common.thread.SerialConfigThread;
 import com.doas.common.utils.*;
-import com.doas.listener.SerialCommListener;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.util.CollectionUtils;
@@ -27,27 +25,20 @@ import java.util.stream.Collectors;
 @Slf4j
 @RestController()
 public class DoasController implements InitializingBean {
-
     @Resource
     private DoasConfig doasConfig;
-
     @Resource
     private DataReadThread dataReadThread;
+    @Resource
+    private SerialConfigThread serialConfigThread;
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        // 起动因子数据采集串口监听
-        SerialParamConfig dataParam = SerialParamConfig.builder()
-                .serialNumber(doasConfig.getSerialNumber()).serialName(Constant.SERIAL_NAME_DATA)
-                .baudRate(doasConfig.getBaudRate()).checkoutBit(doasConfig.getCheckoutBit())
-                .dataBit(doasConfig.getDataBit()).stopBit(doasConfig.getStopBit())
-                .dataFilePath(doasConfig.getDataFilePath()).fileRefreshTime(doasConfig.getFileRefreshTime())
-                .build();
-        SerialCommListener dataCommListener = new SerialCommListener();
-        dataCommListener.init(dataParam);
+        // 启动串口配置线程
+        serialConfigThread.start();
         Thread.sleep(3000);
         // 启动数据读取线程
-        dataReadThread.start();
+        // dataReadThread.start();
     }
 
     /**
@@ -60,7 +51,11 @@ public class DoasController implements InitializingBean {
     @PostMapping("/initData")
     public ResultObject initData(@RequestBody Map<String, Object> param) {
         log.info("param:"+ JSON.toJSONString(param));
-
+        //串口号
+        String serialNumber = param.get("serialNumber").toString();
+        if (!StringUtils.isEmpty(serialNumber)) {
+            doasConfig.setSerialNumber(serialNumber);
+        }
         //请求的数据模型 chart 曲线; map-line 地图（柱线）; map-wall 地图（柱面）
         String dataType = param.get("dataType").toString();
         String extractNum = param.get("extractNum").toString();
@@ -137,6 +132,12 @@ public class DoasController implements InitializingBean {
             //存储因子
             List<String> cells = v.subList(1, v.size() - 7);
             if(k == 0) {
+                //存储因子，地图的因子不需要带单位
+                if (!CollectionUtils.isEmpty(cells)) {
+                    // 没有单位的因子
+                    List<String> factorsNoUnit = cells.stream().map(i -> i.substring(0, i.indexOf("("))).collect(Collectors.toList());
+                    resultMap.put("factorsNoUnit", factorsNoUnit.toArray());
+                }
                 resultMap.put("factors", cells.toArray());
                 resultMap.put("factorColors", ColorUtil.getVariantColors(cells.toArray().length));
                 for (int i = 0; i < cells.size(); i++) {
@@ -144,10 +145,15 @@ public class DoasController implements InitializingBean {
                     realTimeData.add(cells.get(i) + "");
                 }
             } else {
-                //舍弃数值为0的数据
+                //舍弃数值为0的数据，单保留系统状态
                 double sumCellValue = 0;
                 for (int i = 0; i < cells.size(); i++) {
                     sumCellValue = sumCellValue + Double.parseDouble(cells.get(i));
+                }
+                boolean lastRow = (k == dataList.size() - 1);
+                if (lastRow) {
+                    // 系统状态+GPS状态+光源光强+光源已使用时间
+                    systemState = v.subList(v.size() - 4, v.size());
                 }
                 if(sumCellValue <= 0){
                     continue;
@@ -155,17 +161,12 @@ public class DoasController implements InitializingBean {
                 //存储横坐标-时间
                 xAxis.add(v.get(0));
                 //存储数值
-                boolean lastRow = (k == dataList.size() - 1);
                 for (int i = 0; i < cells.size(); i++) {
                     data.get(i).add(cells.get(i));
                     // 最后一行数据,用于在面板上展示
                     if (lastRow) {
                         realTimeData.set(i, cells.get(i));
                     }
-                }
-                if (lastRow) {
-                    // 系统状态+GPS状态+光源光强+光源已使用时间
-                    systemState = v.subList(v.size() - 4, v.size());
                 }
             }
         }
@@ -267,7 +268,10 @@ public class DoasController implements InitializingBean {
             //保存数值的数据
             List<String> cells = row.subList(1, row.size() - 7);
             if (k == 0) {
-                //存储因子
+                //存储因子，地图的因子不需要带单位
+                if (!CollectionUtils.isEmpty(cells)) {
+                   cells = cells.stream().map(i -> i.substring(0, i.indexOf("("))).collect(Collectors.toList());
+                }
                 resultMap.put("factors", cells.toArray());
                 //初始化
                 for (int i = 0; i < cells.size(); i++) {
@@ -287,6 +291,11 @@ public class DoasController implements InitializingBean {
                 for (int i = 0; i < cells.size(); i++) {
                     sumCellValue = sumCellValue + Double.parseDouble(cells.get(i));
                 }
+                // 最后一行数据
+                if (k == dataList.size() - 1) {
+                    // 存储系统状态
+                    systemState = row.subList(row.size() - 4, row.size());
+                }
                 if(sumCellValue <= 0){
                     continue;
                 }
@@ -302,11 +311,6 @@ public class DoasController implements InitializingBean {
                     //计算线条高度，并保存,
                     DoubleSummaryStatistics statistics = redList.stream().mapToDouble((x) -> x).summaryStatistics();
                     dataHigh.get(i).add(cellValue * (statistics.getAverage() / redList.get(i)));
-                }
-                // 最后一行数据
-                if (k == dataList.size() - 1) {
-                    // 存储系统状态
-                    systemState = row.subList(row.size() - 4, row.size());
                 }
             }
         }
@@ -330,5 +334,7 @@ public class DoasController implements InitializingBean {
         }
         return sb.toString();
     }
+
+
 
 }

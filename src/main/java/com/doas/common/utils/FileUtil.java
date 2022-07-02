@@ -5,6 +5,7 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.io.*;
+import java.text.ParseException;
 import java.util.*;
 
 /**
@@ -165,33 +166,94 @@ public class FileUtil implements FilenameFilter {
 
 
     /**
+     * 写入一条中断数据
+     * @param pathName
+     * @param fileRefreshTime
+     */
+    public static void writeBreakData(String pathName, Integer fileRefreshTime) {
+        // 获取文件
+        File file = getFile(pathName, fileRefreshTime);
+        if (file == null) {
+            return ;
+        }
+        // 读取文件的最后一行
+        String lastLine = FileUtil.readLastLine(file);
+        if (StringUtils.isEmpty(lastLine)) {
+            return;
+        }
+        // 修改最后一行内容
+        String[] lastLineArray = lastLine.split("~");
+        if (lastLineArray.length < 4) {
+            return;
+        }
+        lastLineArray[lastLineArray.length - 4] = "0";
+        lastLineArray[lastLineArray.length - 3] = "0";
+        lastLine = String.join("~", lastLineArray);
+        // 写入数据
+        log.info("写入中断数据:{}", lastLine);
+        writeDataDirect(file, lastLine);
+    }
+
+
+    /**
      * 这个方法需要考虑线程安全
      * @param pathName
      * @param lineData
      * @param fileRefreshTime 文件更新时间
      */
-    public static void writeData(String pathName, String lineData, Integer fileRefreshTime) {
-
-        if (Objects.isNull(pathName) || Objects.isNull(lineData)) {
+    public static void writeData(String pathName, Integer fileRefreshTime, String lineData) {
+        if (StringUtils.isEmpty(lineData)) {
             return;
         }
+        // 获取文件
+        File file = getFile(pathName, fileRefreshTime);
+        if (file == null) {
+            return ;
+        }
+        // 写入数据
+        writeData(file, lineData);
+    }
+
+    /**
+     * 按规则获取文件
+     * @param pathName
+     * @param fileRefreshTime
+     * @return
+     */
+    public static File getFile(String pathName, Integer fileRefreshTime) {
+        if (Objects.isNull(pathName)) {
+            return null;
+        }
+        String writeFileName = "";
+        // 查询已存在的文件
+        List<String> fileNameList = FileUtil.getSortedFileNameList(pathName, ".txt");
         try {
-            String writeFileName = "";
-            // 查询已存在的文件
-            List<String> fileNameList = FileUtil.getSortedFileNameList(pathName, ".txt");
             if (CollectionUtils.isEmpty(fileNameList) || DateUtil.diffMinutes(fileNameList.get(0).substring(0, 14), DateUtil.defaultFormat(new Date())) > fileRefreshTime) {
                 writeFileName = DateUtil.defaultFormat(new Date()) + ".txt";
             } else {
                 writeFileName = fileNameList.get(0);
             }
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
 
-            // 获取写入文件
-            File file = new File(pathName + "/" + writeFileName);
+        // 获取写入文件
+        File file = new File(pathName + "/" + writeFileName);
+        return file;
+    }
+
+    /**
+     * 这个方法需要考虑线程安全
+     * @param file
+     * @param lineData
+     */
+    public static void writeData(File file, String lineData) {
+        try {
             if (!file.exists()) {
                 file.createNewFile();
             }
-            // 读取文件最后一行
-            int lineNum = readLastLine(file);
+            // 读取文件最后一行行号
+            int lineNum = readLastLineNum(file);
             // 解析文件内容
             String parsedLineData = parseLineData(lineNum, lineData);
             if (StringUtils.isEmpty(parsedLineData)) {
@@ -209,6 +271,29 @@ public class FileUtil implements FilenameFilter {
     }
 
     /**
+     * 这个方法需要考虑线程安全
+     * @param file
+     * @param lineData
+     */
+    public static void writeDataDirect(File file, String lineData) {
+        try {
+            if (StringUtils.isEmpty(lineData) || !file.exists()) {
+                file.createNewFile();
+            }
+            // 读取文件最后一行行号
+            int lineNum = readLastLineNum(file);
+            // 把内容追加到文件最后
+            FileWriter fw = new FileWriter(file.getAbsoluteFile(), true);
+            BufferedWriter bw = new BufferedWriter(fw);
+            bw.write(lineData);
+            bw.newLine();
+            bw.close();
+        } catch (Exception e) {
+            log.error("Write lineData error!:{}", e.getStackTrace());
+        }
+    }
+
+    /**
      * 解析文件内容
      * @param lineNum
      * @param lineData
@@ -218,8 +303,8 @@ public class FileUtil implements FilenameFilter {
         try {
             String[] lineDateArray = lineData.split(";");
             int size = lineDateArray.length;
-            // 预热中的数据不要
-            if (size < 10 || "0".equals(lineDateArray[size - 5])) {
+            // 预热中的数据也要
+            if (size < 10) {
                 return null;
             }
             StringBuilder parsedLineData = new StringBuilder();
@@ -227,7 +312,8 @@ public class FileUtil implements FilenameFilter {
                 // 解析成文件头 (例如：时间~SO2~NO~NO2~NH3~O3~HCHO~苯~甲苯~二甲苯~乙苯~GPS.x~GPS.y~单位~系统状态~GPS状态)
                 parsedLineData.append("时间~");
                 for (int index = 2; index < size - 7; index++) {
-                    parsedLineData.append(lineDateArray[index].substring(0, lineDateArray[index].indexOf("(")) + "~");
+                    // 因子带上单位
+                    parsedLineData.append(lineDateArray[index].substring(0, lineDateArray[index].indexOf(")") + 1) + "~");
                 }
                 parsedLineData.append("GPS.x~GPS.y~单位~系统状态~GPS状态~光源光强~光源已使用时间");
             } else {
@@ -264,7 +350,7 @@ public class FileUtil implements FilenameFilter {
      * @param file
      * @return
      */
-    public static int readLastLine(File file) {
+    public static int readLastLineNum(File file) {
         try (LineNumberReader lineNumberReader = new LineNumberReader(new FileReader(file))){
             lineNumberReader.skip(Long.MAX_VALUE);
             int lineNumber = lineNumberReader.getLineNumber();
@@ -272,7 +358,50 @@ public class FileUtil implements FilenameFilter {
         } catch (IOException e) {
             return -1;
         }
+    }
 
+    /**
+     * 读取文件最后一行内容
+     * @param file
+     * @return
+     */
+    public static String readLastLine(File file) {
+        // 如果文件只有一行，不读
+        if (file == null || readLastLineNum(file) <= 1) {
+            return "";
+        }
+        // 存储结果
+        StringBuilder builder = new StringBuilder();
+        try (RandomAccessFile randomAccessFile = new RandomAccessFile(file, "r")) {
+            // 指针位置开始为0，所以最大长度为 length-1
+            long fileLastPointer = randomAccessFile.length() - 1;
+            // 从后向前读取文件
+            for (long filePointer = fileLastPointer; filePointer != -1; filePointer--) {
+                // 移动指针指向
+                randomAccessFile.seek(filePointer);
+                int readByte = randomAccessFile.readByte();
+                if (0xA == readByte) {
+                    //  LF='\n'=0x0A 换行
+                    if (filePointer == fileLastPointer) {
+                        // 如果是最后的换行，过滤掉
+                        continue;
+                    }
+                    break;
+                }
+                if (0xD == readByte) {
+                    //  CR ='\r'=0x0D 回车
+                    if (filePointer == fileLastPointer - 1) {
+                        // 如果是倒数的回车也过滤掉
+                        continue;
+                    }
+                    break;
+                }
+                builder.append((char) readByte);
+            }
+        } catch (Exception e) {
+            log.error("file read error, msg:{}", e.getMessage(), e);
+        }
+        return builder.reverse().toString();
     }
 }
 
