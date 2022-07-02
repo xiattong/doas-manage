@@ -48,10 +48,6 @@ public class DoasConfig {
     @Value("${file-refresh-time}")
     private Integer fileRefreshTime = 120;
 
-    /** 因子数据采集 - 串口号*/
-    @Value("${data.serial-number}")
-    private volatile String serialNumber;
-
     /** 因子数据采集 - 波特率*/
     @Value("${data.baud-rate}")
     private Integer baudRate;

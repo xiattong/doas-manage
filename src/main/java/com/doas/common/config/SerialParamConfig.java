@@ -22,7 +22,6 @@ public class SerialParamConfig {
     /** 写入新文件间隔时间，单位分钟*/
     private Integer fileRefreshTime = 120;
 
-    private String serialNumber; // 串口号
     private String serialName;   // 串口名
     private int baudRate;        // 波特率
     private int checkoutBit;     // 校验位

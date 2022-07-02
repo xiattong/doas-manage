@@ -51,11 +51,6 @@ public class DoasController implements InitializingBean {
     @PostMapping("/initData")
     public ResultObject initData(@RequestBody Map<String, Object> param) {
         log.info("param:"+ JSON.toJSONString(param));
-        //串口号
-        String serialNumber = param.get("serialNumber").toString();
-        if (!StringUtils.isEmpty(serialNumber)) {
-            doasConfig.setSerialNumber(serialNumber);
-        }
         //请求的数据模型 chart 曲线; map-line 地图（柱线）; map-wall 地图（柱面）
         String dataType = param.get("dataType").toString();
         String extractNum = param.get("extractNum").toString();

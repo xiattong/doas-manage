@@ -1,7 +1,7 @@
 package com.doas.common.thread;
 
 import com.doas.common.config.DoasConfig;
-import com.doas.listener.SerialCommListener;
+import com.doas.common.utils.SerialCommUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -27,10 +27,8 @@ public class SerialConfigThread extends Thread {
      */
     @Override
     public void run() {
-        SerialCommListener dataCommListener = new SerialCommListener();
         try {
-            System.out.println("SerialConfigThread:run" + Thread.currentThread());
-            dataCommListener.init(doasConfig);
+            SerialCommUtil.init(doasConfig);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
