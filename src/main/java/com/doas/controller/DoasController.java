@@ -38,7 +38,7 @@ public class DoasController implements InitializingBean {
         serialConfigThread.start();
         Thread.sleep(3000);
         // 启动数据读取线程
-        // dataReadThread.start();
+        dataReadThread.start();
     }
 
     /**
