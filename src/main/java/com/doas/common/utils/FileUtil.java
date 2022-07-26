@@ -15,6 +15,8 @@ import java.util.*;
 @Slf4j
 public class FileUtil implements FilenameFilter {
 
+    private static final String SPLIT_SYMBOL = " ";
+
     // 接受的文件类型，小写
     private String[] acceptSuffix;
 
@@ -182,13 +184,13 @@ public class FileUtil implements FilenameFilter {
             return;
         }
         // 修改最后一行内容
-        String[] lastLineArray = lastLine.split("~");
+        String[] lastLineArray = lastLine.split(SPLIT_SYMBOL);
         if (lastLineArray.length < 4) {
             return;
         }
         lastLineArray[lastLineArray.length - 4] = "0";
         lastLineArray[lastLineArray.length - 3] = "0";
-        lastLine = String.join("~", lastLineArray);
+        lastLine = String.join(SPLIT_SYMBOL, lastLineArray);
         // 写入数据
         log.info("写入中断数据:{}", lastLine);
         writeDataDirect(file, lastLine);
@@ -309,32 +311,32 @@ public class FileUtil implements FilenameFilter {
             }
             StringBuilder parsedLineData = new StringBuilder();
             if (lineNum == 0) {
-                // 解析成文件头 (例如：时间~SO2~NO~NO2~NH3~O3~HCHO~苯~甲苯~二甲苯~乙苯~GPS.x~GPS.y~单位~系统状态~GPS状态)
-                parsedLineData.append("时间~");
+                // 解析成文件头 (例如：时间 SO2 NO NO2 NH3 O3 HCHO 苯 甲苯 二甲苯 乙苯 GPS.x GPS.y 单位 系统状态 GPS状态)
+                parsedLineData.append("时间"+SPLIT_SYMBOL);
                 for (int index = 2; index < size - 7; index++) {
                     // 因子带上单位
-                    parsedLineData.append(lineDateArray[index].substring(0, lineDateArray[index].indexOf(")") + 1) + "~");
+                    parsedLineData.append(lineDateArray[index].substring(0, lineDateArray[index].indexOf(")") + 1) + SPLIT_SYMBOL);
                 }
-                parsedLineData.append("GPS.x~GPS.y~单位~系统状态~GPS状态~光源光强~光源已使用时间");
+                parsedLineData.append("GPS.x" + SPLIT_SYMBOL + "GPS.y" + SPLIT_SYMBOL + "单位" + SPLIT_SYMBOL + "系统状态" + SPLIT_SYMBOL + "GPS状态" + SPLIT_SYMBOL + "光源光强" + SPLIT_SYMBOL + "光源已使用时间");
             } else {
-                // 解析成数据 (例如：15:33:51~10~4~64~19~32~1~234~58~34~642~114.363922~36.381824~ug/m3~1~1)
-                parsedLineData.append(DateUtil.formatTime(new Date()) + "~");
+                // 解析成数据 (例如：15:33:51 10 4 64 19 32 1 234 58 34 642 114.363922 36.381824 ug/m3 1 1)
+                parsedLineData.append(DateUtil.formatTime(new Date()) + SPLIT_SYMBOL);
                 for (int index = 2; index < size - 7; index++) {
-                    parsedLineData.append(lineDateArray[index].substring(lineDateArray[index].indexOf("@") + 1) + "~");
+                    parsedLineData.append(lineDateArray[index].substring(lineDateArray[index].indexOf("@") + 1) + SPLIT_SYMBOL);
                 }
                 // GPS.x
-                parsedLineData.append(lineDateArray[size - 7] + "~");
+                parsedLineData.append(lineDateArray[size - 7] + SPLIT_SYMBOL);
                 // GPS.y
-                parsedLineData.append(lineDateArray[size - 6] + "~");
+                parsedLineData.append(lineDateArray[size - 6] + SPLIT_SYMBOL);
                 // 单位
                 String temp = lineDateArray[2];
-                parsedLineData.append(temp.substring(temp.indexOf("(") + 1, temp.indexOf(")")) + "~");
+                parsedLineData.append(temp.substring(temp.indexOf("(") + 1, temp.indexOf(")")) + SPLIT_SYMBOL);
                 // 系统状态
-                parsedLineData.append(lineDateArray[size - 5] + "~");
+                parsedLineData.append(lineDateArray[size - 5] + SPLIT_SYMBOL);
                 // GPS状态
-                parsedLineData.append(lineDateArray[size - 4] + "~");
+                parsedLineData.append(lineDateArray[size - 4] + SPLIT_SYMBOL);
                 // 光源光强
-                parsedLineData.append(lineDateArray[size - 3] + "~");
+                parsedLineData.append(lineDateArray[size - 3] + SPLIT_SYMBOL);
                 // 光源已使用时间
                 parsedLineData.append(lineDateArray[size - 2]);
             }
