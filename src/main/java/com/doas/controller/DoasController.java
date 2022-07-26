@@ -35,7 +35,7 @@ public class DoasController implements InitializingBean {
     @Override
     public void afterPropertiesSet() throws Exception {
         // 启动串口配置线程
-        // serialConfigThread.start();
+        serialConfigThread.start();
         Thread.sleep(3000);
         // 启动数据读取线程
         dataReadThread.start();
