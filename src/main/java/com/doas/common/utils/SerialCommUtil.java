@@ -25,16 +25,12 @@ import java.util.regex.Pattern;
  */
 @Slf4j
 public class SerialCommUtil {
-
-
     // 配置信息
     private static DoasConfig doasConfig;
     // 数据筛选正则
     private final static Pattern DATA_PATTERN = Pattern.compile("ST(.*)ED");
-
-
-
-
+    // 定时器 10秒
+    private static long startTimer = System.currentTimeMillis();
 
     /**
      * 初始化串口
@@ -109,6 +105,8 @@ public class SerialCommUtil {
                     if (m.find()) {
                         // 读取数据
                         FileUtil.writeData(paramConfig.getDataFilePath(), paramConfig.getFileRefreshTime(), m.group(0));
+                        // 更新即时器
+                        startTimer = System.currentTimeMillis();
                         reTry = 0;
                         sb.delete(0, sb.length());
                     }
@@ -129,6 +127,12 @@ public class SerialCommUtil {
                 }
             } catch (IOException e) {
                 e.printStackTrace();
+            }
+            // 超过 10s 写入断开数据
+            log.info("timer:{}", System.currentTimeMillis());
+            if (System.currentTimeMillis() - startTimer > 10000) {
+                log.info("超过10s,写入断开数据");
+                FileUtil.writeBreakData(paramConfig.getDataFilePath(), paramConfig.getFileRefreshTime());
             }
         }
     }

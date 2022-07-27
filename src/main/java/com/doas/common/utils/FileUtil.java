@@ -193,7 +193,7 @@ public class FileUtil implements FilenameFilter {
         lastLine = String.join(SPLIT_SYMBOL, lastLineArray);
         // 写入数据
         log.info("写入中断数据:{}", lastLine);
-        writeDataDirect(file, lastLine);
+        writeDataDirect(file, lastLine, 3);
     }
 
 
@@ -276,19 +276,23 @@ public class FileUtil implements FilenameFilter {
      * 这个方法需要考虑线程安全
      * @param file
      * @param lineData
+     * @param writeLineNum 写入行数
      */
-    public static void writeDataDirect(File file, String lineData) {
+    public static void writeDataDirect(File file, String lineData, int writeLineNum) {
+        if (writeLineNum <= 0) {
+            return;
+        }
         try {
             if (StringUtils.isEmpty(lineData) || !file.exists()) {
                 file.createNewFile();
             }
-            // 读取文件最后一行行号
-            int lineNum = readLastLineNum(file);
             // 把内容追加到文件最后
             FileWriter fw = new FileWriter(file.getAbsoluteFile(), true);
             BufferedWriter bw = new BufferedWriter(fw);
-            bw.write(lineData);
-            bw.newLine();
+            for (int i = 0; i < writeLineNum; i ++) {
+                bw.write(lineData);
+                bw.newLine();
+            }
             bw.close();
         } catch (Exception e) {
             log.error("Write lineData error!:{}", e.getStackTrace());

@@ -142,8 +142,13 @@ public class DoasController implements InitializingBean {
             } else {
                 //舍弃数值为0的数据，单保留系统状态
                 double sumCellValue = 0;
-                for (int i = 0; i < cells.size(); i++) {
-                    sumCellValue = sumCellValue + Double.parseDouble(cells.get(i));
+                try {
+                    for (int i = 0; i < cells.size(); i++) {
+                        sumCellValue = sumCellValue + Double.parseDouble(cells.get(i));
+                    }
+                } catch (NumberFormatException exception) {
+                    log.error("因子解析异常：{}", exception.getMessage());
+                    continue;
                 }
                 boolean lastRow = (k == dataList.size() - 1);
                 if (lastRow) {
