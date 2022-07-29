@@ -282,8 +282,8 @@ public class DoasController implements InitializingBean {
             } else {
                 //舍弃地图坐标为0的数据
                 List<String> coordinate = row.subList(row.size() - 7, row.size() - 5);
-                if (Double.valueOf(coordinate.get(0)) == 0
-                        || Double.valueOf(coordinate.get(1)) == 0) {
+                if (Integer.valueOf(coordinate.get(0)) == 0
+                        || Integer.valueOf(coordinate.get(1)) == 0) {
                     continue;
                 }
                 //舍弃数值为0的数据
