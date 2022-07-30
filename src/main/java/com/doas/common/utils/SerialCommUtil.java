@@ -31,6 +31,8 @@ public class SerialCommUtil {
     private final static Pattern DATA_PATTERN = Pattern.compile("ST(.*)ED");
     // 定时器 10秒
     private static long startTimer = System.currentTimeMillis();
+    // 系统是否已经链接
+    public volatile static boolean isConnected = false;
 
     /**
      * 初始化串口
@@ -103,6 +105,7 @@ public class SerialCommUtil {
                     sb.append(data);
                     Matcher m = DATA_PATTERN.matcher(sb.toString());
                     if (m.find()) {
+                        isConnected = true;
                         // 读取数据
                         FileUtil.writeData(paramConfig.getDataFilePath(), paramConfig.getFileRefreshTime(), m.group(0));
                         // 更新即时器
@@ -115,6 +118,7 @@ public class SerialCommUtil {
                 Thread.sleep(1000);
             }
         } catch (IOException | InterruptedException e) {
+            isConnected = false;
             serialPort.close();
             log.info("通讯中断，写入一条中断数据...");
             FileUtil.writeBreakData(paramConfig.getDataFilePath(), paramConfig.getFileRefreshTime());
@@ -131,6 +135,7 @@ public class SerialCommUtil {
             // 超过 10s 写入断开数据
             log.info("timer:{}", System.currentTimeMillis());
             if (System.currentTimeMillis() - startTimer > 10000) {
+                isConnected = false;
                 log.info("超过10s,写入断开数据");
                 FileUtil.writeBreakData(paramConfig.getDataFilePath(), paramConfig.getFileRefreshTime());
             }

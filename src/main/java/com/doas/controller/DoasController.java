@@ -96,6 +96,10 @@ public class DoasController implements InitializingBean {
                 return ResultObject.error(e.getMessage());
             }
         }
+        // 对系统状态的处理
+        if (!SerialCommUtil.isConnected) {
+            resultMap.put("systemState", Arrays.asList("0", "0"));
+        }
         result.put("result", resultMap);
         return result;
     }
@@ -280,16 +284,20 @@ public class DoasController implements InitializingBean {
                     colors.add(new ArrayList<>());
                 }
             } else {
-                //舍弃地图坐标为0的数据
-                List<String> coordinate = row.subList(row.size() - 7, row.size() - 5);
-                if (Integer.valueOf(coordinate.get(0)) == 0
-                        || Integer.valueOf(coordinate.get(1)) == 0) {
-                    continue;
-                }
                 //舍弃数值为0的数据
                 double sumCellValue = 0;
-                for (int i = 0; i < cells.size(); i++) {
-                    sumCellValue = sumCellValue + Double.parseDouble(cells.get(i));
+                try {
+                    for (int i = 0; i < cells.size(); i++) {
+                        sumCellValue = sumCellValue + Double.parseDouble(cells.get(i));
+                    }
+                } catch (NumberFormatException exception) {
+                    log.error("因子解析异常：{}", exception.getMessage());
+                    continue;
+                }
+                //舍弃地图坐标为0的数据
+                List<String> coordinate = row.subList(row.size() - 7, row.size() - 5);
+                if (Double.parseDouble(coordinate.get(0)) < 10 || Double.parseDouble(coordinate.get(1)) < 10) {
+                    continue;
                 }
                 // 最后一行数据
                 if (k == dataList.size() - 1) {
