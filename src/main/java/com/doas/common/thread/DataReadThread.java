@@ -15,6 +15,7 @@ import java.io.RandomAccessFile;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * txt 文件解析工具
@@ -46,17 +47,26 @@ public class DataReadThread extends Thread {
     private String timeRange = "";
     /** 当权读取的最新文件*/
     private String currentNewFile = "";
+    /** txt 文件分隔符正则*/
+    private String regexTxt = "~| ";
+    /** csv 文件分隔符正则*/
+    private String regexCsv = ",";
 
+
+    @Override
+    public ClassLoader getContextClassLoader() {
+        return super.getContextClassLoader();
+    }
 
     /**
-     * 读取txt线程
+     * 读取txt、csv文件线程
      * @return
      */
     @Override
     public void run() {
         while(true) {
             // 更新文件名称列表
-            this.fileNameList = FileUtil.getSortedFileNameList(doasConfig.getDataFilePath(),".txt");
+            this.fileNameList = FileUtil.getSortedFileNameList(doasConfig.getDataFilePath(),".txt",".csv");
             if (CollectionUtils.isEmpty(this.fileNameList)) {
                 try {
                     Thread.sleep(5000);
@@ -86,6 +96,7 @@ public class DataReadThread extends Thread {
                 File file = new File(filePath + "/" + name);
                 if(file != null) {
                     String fileName = file.getName();
+                    String suffixName = fileName.substring(fileName.lastIndexOf("."));
                     long len = file.length();
                     if (len > 0) {
                         byte[] ds = new byte[(int) len];
@@ -114,16 +125,21 @@ public class DataReadThread extends Thread {
                                     // 19 - (20 - 10) = 9
                                     String line = lines[slideIndex - lineNum + lines.length];
                                     if (this.cellsNum == 0) {
-                                        tempDataList.add(Arrays.asList(line.split("~| ")));
+                                        List<String> data = Arrays.asList(line.split(getSplitRegex(suffixName))).stream()
+                                                .filter(i -> !i.equals("单位"))
+                                                .collect(Collectors.toList());
+                                        tempDataList.add(data);
                                         this.cellsNum = tempDataList.get(0).size();
-                                    } else if (line.split("~| ").length == this.cellsNum) {
+                                    } else {
+                                        List<String> data = Arrays.asList(line.split(getSplitRegex(suffixName))).stream()
+                                                .filter(i -> !i.contains("/m3"))
+                                                .collect(Collectors.toList());
                                         // 加入时间段判断
-                                        String[] lineArray = line.split("~| ");
-                                        if ("time".equals(lineArray[0].toLowerCase()) || "时间".equals(lineArray[0])) {
+                                        if ("time".equals(data.get(0).toLowerCase()) || "时间".equals(data.get(0))) {
                                             continue;
                                         }
-                                        if (DateUtil.isBetweenDateTimeRange(lineArray[0], this.timeRange)) {
-                                            tempDataList.add(Arrays.asList(lineArray));
+                                        if (data.size() == this.cellsNum && DateUtil.isBetweenDateTimeRange(data.get(0), this.timeRange)) {
+                                            tempDataList.add(data);
                                             markBreak = true;
                                         } else if (markBreak) {
                                             break;
@@ -208,5 +224,17 @@ public class DataReadThread extends Thread {
     private void refresh() {
         this.currentLineNo = 0;
         this.dataList.clear();
+    }
+
+    /**
+     * 根据文件后缀名获取分隔符
+     * @param suffixName
+     * @return
+     */
+    private String getSplitRegex(String suffixName) {
+        if (suffixName.toLowerCase().equals(".csv")){
+            return this.regexCsv;
+        }
+        return this.regexTxt;
     }
 }

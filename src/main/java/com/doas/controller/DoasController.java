@@ -98,7 +98,10 @@ public class DoasController implements InitializingBean {
         }
         // 对系统状态的处理
         if (!SerialCommUtil.isConnected) {
-            resultMap.put("systemState", Arrays.asList("0", "0"));
+            List<String> systemState = (List<String>) resultMap.get("systemState");
+            systemState.set(0, "0");
+            systemState.set(1, "0");
+            resultMap.put("systemState", systemState);
         }
         result.put("result", resultMap);
         return result;
@@ -129,7 +132,7 @@ public class DoasController implements InitializingBean {
         for(int k = 0 ; k < dataList.size() ; k ++){
             List<String> v = dataList.get(k);
             //存储因子
-            List<String> cells = v.subList(1, v.size() - 7);
+            List<String> cells = v.subList(1, v.size() - 6); //csv:6
             if(k == 0) {
                 //存储因子，地图的因子不需要带单位
                 if (!CollectionUtils.isEmpty(cells)) {
@@ -238,7 +241,7 @@ public class DoasController implements InitializingBean {
         for (int k = 0 ; k < dataList.size() ; k ++) {
             List<String> row = dataList.get(k);
             //保存数值的数据
-            List<String> cells = row.subList(1, row.size() - 7);
+            List<String> cells = row.subList(1, row.size() - 6);//csv:6
             //解析指定的色等值
             if (!StringUtils.isEmpty(specifiedRedList) && specifiedRedList.split(",").length == cells.size()) {
                 List<String> redListStr = Arrays.asList(specifiedRedList.split(","));
@@ -295,7 +298,7 @@ public class DoasController implements InitializingBean {
                     continue;
                 }
                 //舍弃地图坐标为0的数据
-                List<String> coordinate = row.subList(row.size() - 7, row.size() - 5);
+                List<String> coordinate = row.subList(row.size() - 6, row.size() - 4);// csv:6,4
                 if (Double.parseDouble(coordinate.get(0)) < 10 || Double.parseDouble(coordinate.get(1)) < 10) {
                     continue;
                 }
