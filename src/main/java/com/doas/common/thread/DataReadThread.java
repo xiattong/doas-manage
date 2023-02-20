@@ -132,7 +132,7 @@ public class DataReadThread extends Thread {
                                         this.cellsNum = tempDataList.get(0).size();
                                     } else {
                                         List<String> data = Arrays.asList(line.split(getSplitRegex(suffixName))).stream()
-                                                .filter(i -> !i.contains("/m3"))
+                                                .filter(i -> !i.contains("ug"))
                                                 .collect(Collectors.toList());
                                         // 加入时间段判断
                                         if ("time".equals(data.get(0).toLowerCase()) || "时间".equals(data.get(0))) {

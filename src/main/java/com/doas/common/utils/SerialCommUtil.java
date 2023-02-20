@@ -33,6 +33,8 @@ public class SerialCommUtil {
     private static long startTimer = System.currentTimeMillis();
     // 系统是否已经链接
     public volatile static boolean isConnected = false;
+    // 是否需要创建文件
+    public volatile static boolean isCreateFile = true;
 
     /**
      * 初始化串口
@@ -107,7 +109,9 @@ public class SerialCommUtil {
                     if (m.find()) {
                         isConnected = true;
                         // 读取数据
-                        FileUtil.writeData(paramConfig.getDataFilePath(), paramConfig.getFileRefreshTime(), m.group(0));
+                        // FileUtil.writeData(paramConfig.getDataFilePath(), paramConfig.getFileRefreshTime(), m.group(0));
+                        FileUtil.writeData(paramConfig.getDataFilePath(), isCreateFile, m.group(0));
+                        isCreateFile = false;
                         // 更新即时器
                         startTimer = System.currentTimeMillis();
                         reTry = 0;
@@ -119,6 +123,7 @@ public class SerialCommUtil {
             }
         } catch (IOException | InterruptedException e) {
             isConnected = false;
+            isCreateFile = true;
             serialPort.close();
             log.info("通讯中断，写入一条中断数据...");
             FileUtil.writeBreakData(paramConfig.getDataFilePath(), paramConfig.getFileRefreshTime());
@@ -136,6 +141,7 @@ public class SerialCommUtil {
             log.info("timer:{}", System.currentTimeMillis());
             if (System.currentTimeMillis() - startTimer > 10000) {
                 isConnected = false;
+                isCreateFile = true;
                 log.info("超过10s,写入断开数据");
                 FileUtil.writeBreakData(paramConfig.getDataFilePath(), paramConfig.getFileRefreshTime());
             }

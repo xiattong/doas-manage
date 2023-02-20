@@ -6,6 +6,7 @@ import com.doas.common.thread.DataReadThread;
 import com.doas.common.thread.SerialConfigThread;
 import com.doas.common.utils.*;
 import lombok.extern.slf4j.Slf4j;
+import oracle.jrockit.jfr.jdkevents.ThrowableTracer;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -148,7 +149,7 @@ public class DoasController implements InitializingBean {
                 }
             } else {
                 //舍弃数值为0的数据，单保留系统状态
-                double sumCellValue = 0;
+                double sumCellValue = 0.0;
                 try {
                     for (int i = 0; i < cells.size(); i++) {
                         sumCellValue = sumCellValue + Double.parseDouble(cells.get(i));
@@ -169,10 +170,14 @@ public class DoasController implements InitializingBean {
                 xAxis.add(v.get(0));
                 //存储数值
                 for (int i = 0; i < cells.size(); i++) {
-                    data.get(i).add(cells.get(i));
-                    // 最后一行数据,用于在面板上展示
-                    if (lastRow) {
-                        realTimeData.set(i, cells.get(i));
+                    try {
+                        data.get(i).add(cells.get(i));
+                        // 最后一行数据,用于在面板上展示
+                        if (lastRow) {
+                            realTimeData.set(i, cells.get(i));
+                        }
+                    } catch (Exception e) {
+                        log.error("error:{}, cells:{}, data:{}", e.getMessage(), cells, data);
                     }
                 }
             }

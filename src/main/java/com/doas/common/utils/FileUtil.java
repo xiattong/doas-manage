@@ -188,6 +188,9 @@ public class FileUtil implements FilenameFilter {
         if (lastLineArray.length < 4) {
             return;
         }
+        if ("0".equals(lastLineArray[lastLineArray.length - 3]) && "0".equals(lastLineArray[lastLineArray.length - 4])) {
+            return;
+        }
         lastLineArray[lastLineArray.length - 4] = "0";
         lastLineArray[lastLineArray.length - 3] = "0";
         lastLine = String.join(SPLIT_SYMBOL, lastLineArray);
@@ -200,8 +203,8 @@ public class FileUtil implements FilenameFilter {
     /**
      * 这个方法需要考虑线程安全
      * @param pathName
-     * @param lineData
      * @param fileRefreshTime 文件更新时间
+     * @param lineData
      */
     public static void writeData(String pathName, Integer fileRefreshTime, String lineData) {
         if (StringUtils.isEmpty(lineData)) {
@@ -209,6 +212,25 @@ public class FileUtil implements FilenameFilter {
         }
         // 获取文件
         File file = getFile(pathName, fileRefreshTime);
+        if (file == null) {
+            return ;
+        }
+        // 写入数据
+        writeData(file, lineData);
+    }
+
+    /**
+     * 这个方法需要考虑线程安全
+     * @param pathName
+     * @param isCreateFile 是否创建文件
+     * @param lineData
+     */
+    public static void writeData(String pathName, boolean isCreateFile, String lineData) {
+        if (StringUtils.isEmpty(lineData)) {
+            return;
+        }
+        // 获取文件
+        File file = getFile(pathName, isCreateFile);
         if (file == null) {
             return ;
         }
@@ -239,6 +261,29 @@ public class FileUtil implements FilenameFilter {
             e.printStackTrace();
         }
 
+        // 获取写入文件
+        File file = new File(pathName + "/" + writeFileName);
+        return file;
+    }
+
+    /**
+     * 按规则获取文件
+     * @param pathName
+     * @param isCreateFile 是否创建新的文件
+     * @return
+     */
+    public static File getFile(String pathName, boolean isCreateFile) {
+        if (Objects.isNull(pathName)) {
+            return null;
+        }
+        String writeFileName = "";
+        // 查询已存在的文件
+        List<String> fileNameList = FileUtil.getSortedFileNameList(pathName, ".txt");
+        if (isCreateFile) {
+            writeFileName = DateUtil.defaultFormat(new Date()) + ".txt";
+        } else {
+            writeFileName = fileNameList.get(0);
+        }
         // 获取写入文件
         File file = new File(pathName + "/" + writeFileName);
         return file;
