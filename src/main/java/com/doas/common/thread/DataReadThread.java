@@ -124,16 +124,14 @@ public class DataReadThread extends Thread {
                                     // 18 - (20 - 10) = 8
                                     // 19 - (20 - 10) = 9
                                     String line = lines[slideIndex - lineNum + lines.length];
+                                    List<String> data = Arrays.asList(line.split(getSplitRegex(suffixName))).stream()
+                                            .filter(i -> !i.equals("单位"))
+                                            .filter(i -> !i.equals("ug/m3"))
+                                            .collect(Collectors.toList());
                                     if (this.cellsNum == 0) {
-                                        List<String> data = Arrays.asList(line.split(getSplitRegex(suffixName))).stream()
-                                                .filter(i -> !i.equals("单位"))
-                                                .collect(Collectors.toList());
                                         tempDataList.add(data);
                                         this.cellsNum = tempDataList.get(0).size();
                                     } else {
-                                        List<String> data = Arrays.asList(line.split(getSplitRegex(suffixName))).stream()
-                                                .filter(i -> !i.contains("ug"))
-                                                .collect(Collectors.toList());
                                         // 加入时间段判断
                                         if ("time".equals(data.get(0).toLowerCase()) || "时间".equals(data.get(0))) {
                                             continue;

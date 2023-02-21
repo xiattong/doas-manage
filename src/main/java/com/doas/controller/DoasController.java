@@ -6,7 +6,6 @@ import com.doas.common.thread.DataReadThread;
 import com.doas.common.thread.SerialConfigThread;
 import com.doas.common.utils.*;
 import lombok.extern.slf4j.Slf4j;
-import oracle.jrockit.jfr.jdkevents.ThrowableTracer;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -278,7 +277,7 @@ public class DoasController implements InitializingBean {
         for (int k = 0 ; k < dataList.size() ; k ++) {
             List<String> row = dataList.get(k);
             //保存数值的数据
-            List<String> cells = row.subList(1, row.size() - 7);
+            List<String> cells = row.subList(1, row.size() - 6);//csv:6
             if (k == 0) {
                 //存储因子，地图的因子不需要带单位
                 if (!CollectionUtils.isEmpty(cells)) {
